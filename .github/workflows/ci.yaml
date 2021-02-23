@@ -25,11 +25,5 @@ jobs:
         run: npm run lint
       - name: build
         run: npm run build
-  test:
-    runs-on: ubuntu-latest
-    needs:
-    - build
-    steps:
-    - uses: actions/checkout@v2
-    - name: test
-      run: npm run test
+      - name: test
+        run: npm run test
