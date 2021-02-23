@@ -1,0 +1,16 @@
+{
+    "name": "test",
+    "description": "Simple test queries",
+    "url" : "",
+    "folder" : "./Unittest",
+    "queries": {
+        "Schema": {
+            "store" : "SchemaDefs",
+            "query" : "select * from meta.ecschemadef"
+        },
+        "Class": {
+            "store" : "ClassDefs",
+            "query" : "select * from meta.ecclassdef"
+        }
+    }
+}

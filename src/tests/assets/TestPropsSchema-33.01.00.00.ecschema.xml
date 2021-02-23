@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ECSchema schemaName="TestPropsSchema" alias="tps" version="01.00.00"
+    xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.2">
+    <ECSchemaReference name="BisCore" version="01.00.00" alias="bis"/>
+    <ECEntityClass typeName="ToolBox">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECStructProperty propertyName="BestTool" typeName="Tool" />
+        <ECStructProperty propertyName="WorstTool" typeName="Tool" />
+        <ECStructArrayProperty propertyName="Tools" typeName="Tool" minOccurs="0" maxOccurs="42"/>
+    </ECEntityClass>
+    <ECStructClass typeName="Tool">
+        <ECProperty propertyName="Name" typeName="string"/>
+        <ECProperty propertyName="Weight" typeName="double"/>
+    </ECStructClass>
+    <ECEntityClass typeName="NavigationModel">
+        <BaseClass>bis:PhysicalModel</BaseClass>
+    </ECEntityClass>
+    <ECEntityClass typeName="Point3DElement">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECProperty propertyName="TestPropertyPoint3D" typeName="point3d"/>
+    </ECEntityClass>
+    <ECEntityClass typeName="Point2DElement">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECProperty propertyName="TestPropertyPoint2D" typeName="point2d"/>
+    </ECEntityClass>
+    <ECStructClass typeName="Person">
+        <ECProperty propertyName="Age" typeName="int"/>
+        <ECProperty propertyName="Name" typeName="string"/>
+        <ECStructProperty propertyName="PersonIQ" typeName="IQ"/>
+    </ECStructClass>
+    <ECStructClass typeName="IQ">
+        <ECProperty propertyName="Memory" typeName="int"/>
+        <ECProperty propertyName="Perception" typeName="int"/>
+    </ECStructClass>
+    <ECEntityClass typeName="People">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECStructProperty propertyName="PersonA" typeName="Person"/>
+    </ECEntityClass>
+    <ECEntityClass typeName="AspectElement">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECProperty propertyName="Type" typeName="string" description="An element type"/>
+    </ECEntityClass>
+    <ECEntityClass typeName="TestUniqueAspect" description="For imme agent integration tests">
+        <BaseClass>bis:ElementUniqueAspect</BaseClass>
+        <ECProperty propertyName="Diameter" typeName="int" />
+    </ECEntityClass>
+    <ECEntityClass typeName="TestMultiAspect" >
+        <BaseClass>bis:ElementMultiAspect</BaseClass>
+        <ECProperty propertyName="TextSize" typeName="double" description="A text size of element"/>
+		<ECProperty propertyName="TextFont" typeName="string" description="A text font of element"/>
+		<ECProperty propertyName="Color" typeName="int" description="A color of element"/>
+    </ECEntityClass>
+    <ECEntityClass typeName="KeyWordsElement">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECProperty propertyName="Offset" typeName="string"/>
+        <ECProperty propertyName="Count" typeName="int"/>
+        <ECProperty propertyName="Limit" typeName="int"/>
+        <ECProperty propertyName="Select" typeName="int"/>
+    </ECEntityClass>
+    <ECEntityClass typeName="ArrayElement">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+        <ECArrayProperty propertyName="PropertyNames" typeName="string" minOccurs="0" maxOccurs="unbounded"/>
+    </ECEntityClass>
+    <ECRelationshipClass typeName="TestGeomertric3dElementIsOfType" strength="referencing" modifier="None">
+        <BaseClass>bis:GeometricElement3dHasTypeDefinition</BaseClass>
+        <Source multiplicity="(0..*)" roleLabel="is of" polymorphic="true">
+            <Class class="TestGeomertric3dElement" />
+        </Source>
+        <Target multiplicity="(0..1)" roleLabel="is type of" polymorphic="true">
+            <Class class="TestPhysicalType"/>
+        </Target>
+    </ECRelationshipClass>
+    <ECRelationshipClass typeName="TestGeomertric2dElementIsOfType" strength="referencing" modifier="None">
+        <BaseClass>bis:GeometricElement2dHasTypeDefinition</BaseClass>
+        <Source multiplicity="(0..*)" roleLabel="is of" polymorphic="true">
+            <Class class="TestGeomertric2dElement" />
+        </Source>
+        <Target multiplicity="(0..1)" roleLabel="is type of" polymorphic="true">
+            <Class class="TestPhysicalType"/>
+        </Target>
+    </ECRelationshipClass>
+    <ECEntityClass typeName="TestGeomertric3dElement" displayLabel="Physical Element">
+        <BaseClass>bis:GeometricElement3d</BaseClass>
+    </ECEntityClass>
+    <ECEntityClass typeName="TestGeomertric2dElement" displayLabel="Physical Element">
+        <BaseClass>bis:GeometricElement2d</BaseClass>
+    </ECEntityClass>
+    <ECEntityClass typeName="TestPhysicalType" displayLabel="Physical Type">
+        <BaseClass>bis:TypeDefinitionElement</BaseClass>
+    </ECEntityClass>
+    <ECEntityClass typeName="BaseConcreteElement" modifier="none">
+        <BaseClass>bis:PhysicalElement</BaseClass>
+    </ECEntityClass>
+    <ECEntityClass typeName="DerivedConcreteElement">
+        <BaseClass>BaseConcreteElement</BaseClass>
+        <ECProperty propertyName="Length" typeName="int" />
+        <ECProperty propertyName="Width" typeName="int" />
+    </ECEntityClass>
+</ECSchema>

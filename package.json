@@ -1,0 +1,46 @@
+{
+  "main": "lib/Main.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc 1>&2  && npm run copy:test-assets",
+    "clean": "rimraf lib",
+    "lint": "eslint . --ext .ts",
+    "start": "node ./lib/main.js",
+    "start:snapshot": "node ./lib/MainSnapshot.js",
+    "test": "mocha ./lib/tests/*.test.js",
+    "copy:test-assets": "cpx \"./src/tests/assets/**/{*,.*}\" ./lib/tests/assets"
+  },
+  "repository": {},
+  "dependencies": {
+    "@bentley/backend-itwin-client": "^2.12",
+    "@bentley/bentleyjs-core": "^2.12",
+    "@bentley/ecschema-metadata": "^2.12",
+    "@bentley/geometry-core": "^2.12",
+    "@bentley/imodelhub-client": "^2.12",
+    "@bentley/imodeljs-backend": "^2.12",
+    "@bentley/imodeljs-common": "^2.12",
+    "@bentley/itwin-client": "^2.12",
+    "@bentley/rbac-client": "^2.12",
+    "@bentley/telemetry-client": "^2.12",
+    "mocha": "^8.2.1"
+  },
+  "devDependencies": {
+    "@bentley/build-tools": "^2.12",
+    "@types/chai": "^4.2.14",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^12.18.3",
+    "@typescript-eslint/eslint-plugin": "^4.15.0",
+    "@typescript-eslint/parser": "^4.15.0",
+    "chai": "^4.2.0",
+    "eslint": "^7.19.0",
+    "eslint-config-prettier": "^7.2.0",
+    "rimraf": "^2.6.2",
+    "ts-node": "^9.1.1",
+    "typescript": "~3.7.4"
+  },
+  "mocha": {
+    "timeout": 60000,
+    "exit": true,
+    "check-leaks": true
+  }
+}
