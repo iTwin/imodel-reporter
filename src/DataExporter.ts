@@ -2,8 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { DbResult, Logger, LogLevel } from "@bentley/bentleyjs-core";
-import { ECSqlStatement, IModelDb } from "@bentley/imodeljs-backend";
+import { DbResult, Id64Array, Logger, LogLevel } from "@bentley/bentleyjs-core";
+import { BackendRequestContext, ECSqlStatement, IModelDb } from "@bentley/imodeljs-backend";
+import { MassPropertiesOperation, MassPropertiesRequestProps, MassPropertiesResponseProps } from "@bentley/imodeljs-common";
 import * as path from "path";
 import * as  fs  from "fs";
 const loggerCategory = "DataExporter";
@@ -52,6 +53,66 @@ export class DataExporter {
     return outRow;
   }
 
+  private getColumns(statement: ECSqlStatement): string[] {
+    const columns: string[] = [];
+    for(let i=0; i< statement.getColumnCount(); i++) {
+      columns.push(statement.getValue(i).columnInfo.getAccessString());
+    }
+    return columns;
+  }
+  
+  private async calculateVolume(ids: Id64Array): Promise<MassPropertiesResponseProps> {
+    const requestProps: MassPropertiesRequestProps = {
+      operation: MassPropertiesOperation.AccumulateVolumes,
+      candidates: ids,
+    };
+    const requestContext = new BackendRequestContext();
+    const result = await this.iModelDb.getMassProperties(requestContext, requestProps);
+
+    return result;
+
+  }
+
+  public async writeVolumes(ecSql: string, fileName: string): Promise<void> {
+    const outputFileName = path.join(this.outputDir, fileName);
+    const writeStream = fs.createWriteStream(outputFileName);
+    const ids: Id64Array = [];
+
+    this.iModelDb.withPreparedStatement(ecSql, (statement: ECSqlStatement): void => {
+      while (DbResult.BE_SQLITE_ROW === statement.step()) {
+        ids.push(statement.getValue(0).getId());
+      }
+    });
+
+    const result = await this.calculateVolume(ids);
+    writeStream.write(JSON.stringify(result.volume));
+  }
+
+  public async writeVolumes2(ecSql: string, fileName: string): Promise<void> {
+    const outputFileName = path.join(this.outputDir, fileName);
+    const writeStream = fs.createWriteStream(outputFileName);
+    let rowCount = 0;
+    const header: string[] = ["volume"];
+    
+    await this.iModelDb.withPreparedStatement(ecSql, async (statement: ECSqlStatement): Promise<void> => {
+      while (DbResult.BE_SQLITE_ROW === statement.step()) {
+        if (0 === rowCount) {
+          header.push (...this.getColumns(statement));
+          const outHeader = header.join(';');
+          writeStream.write(`${outHeader}\n`);
+        }
+
+        const parsedIds: Id64Array = <Id64Array>JSON.parse(statement.getValue(0).getString());
+        const result = await this.calculateVolume(parsedIds);          
+        const stringifiedRow = this.rowToString(statement);
+        writeStream.write(`${result.volume};${stringifiedRow}\n`);
+
+        ++rowCount;
+        console.log(`Volumes2 has written row # ${rowCount}`);
+      }
+    });
+  }
+
   public writeQueryResultsToCsvFile(ecSql: string, fileName: string): void {
     const outputFileName: string = path.join(this.outputDir, fileName);
     const writeStream = fs.createWriteStream(outputFileName);
@@ -60,15 +121,11 @@ export class DataExporter {
     const header: string[] = [];
    
     this.iModelDb.withPreparedStatement(ecSql, (statement: ECSqlStatement): void => {
-      if (DbResult.BE_SQLITE_ROW === statement.step()) {
-        for (let i = 0; i < statement.getColumnCount(); i++) {
-          header.push(statement.getValue(i).columnInfo.getAccessString());
-        }   
-        const outHeader: string = header.join(";");
-        writeStream.write(`${outHeader}\n`);
-        writeStream.write(`${this.rowToString(statement)}\n`);
-        rowCount++;
-      }
+      if (0 === rowCount) {
+          header.push (...this.getColumns(statement));
+          const outHeader = header.join(';');
+          writeStream.write(outHeader);
+        }
 
       while (DbResult.BE_SQLITE_ROW === statement.step()) {
         const stringifiedRow = this.rowToString(statement);

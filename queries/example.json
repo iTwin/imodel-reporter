@@ -19,6 +19,18 @@
 	      "2dElements" : {
             "store" : "2dElements",
             "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"
+        }        
+    },
+    "volumeQueries": {
+        "singleIds": {
+            "store" : "SingleIds",
+            "query" : "SELECT ECInstanceId FROM bis.PhysicalElement LIMIT 100"
+        }
+    },
+    "volumeQueries2": {
+        "groupedIds" : {
+            "store" : "GroupedIds",
+            "query" : "SELECT json_group_array(IdToHex(e.ECInstanceId)) as banana, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id"
         }
     }
 }

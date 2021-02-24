@@ -20,7 +20,7 @@ async function signIn(): Promise<AccessToken|undefined> {
   const requestContext = new ClientRequestContext();
   await client.initialize(requestContext);
 
-  return new Promise<AccessToken | undefined>((resolve, _reject) => {
+  return new Promise<AccessToken | undefined>((resolve) => {
     client.onUserStateChanged.addListener((token: AccessToken | undefined) => resolve(token));
     client.signIn(requestContext);
   });
@@ -76,7 +76,7 @@ export async function main(process: NodeJS.Process): Promise<void> {
     console.log("\nFinished opening iModel");
 
     const exporter = new DataExporter(iModelDb);
-    exporter.setfolder(userdata.folder)
+    exporter.setfolder(userdata.folder);
 
     let queryCount = 0;
     for (const querykey of Object.keys(userdata.queries)) {
@@ -85,6 +85,22 @@ export async function main(process: NodeJS.Process): Promise<void> {
       exporter.writeQueryResultsToCsvFile(aQuery.query,aQuery.store + ".csv");
     }
 
+    console.log(`Number of Queries = ${queryCount}`);
+    queryCount = 0;
+    for (const querykey of Object.keys(userdata.volumeQueries)) {
+      queryCount++;
+      const aQuery = userdata.volumeQueries[querykey];
+      await exporter.writeVolumes(aQuery.query, aQuery.store + ".csv");
+    }
+
+    console.log(`Number of Queries = ${queryCount}`);
+    queryCount = 0;
+    for (const querykey of Object.keys(userdata.volumeQueries2)) {
+      queryCount++;
+      const aQuery = userdata.volumeQueries2[querykey];
+      await exporter.writeVolumes2(aQuery.query, aQuery.store + ".csv");
+    }
+    
     console.log(`Number of Queries = ${queryCount}`);
     iModelDb.close();
   } catch (error) {
