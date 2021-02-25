@@ -55,7 +55,7 @@ export class DataExporter {
 
   private getColumns(statement: ECSqlStatement): string[] {
     const columns: string[] = [];
-    for(let i=0; i< statement.getColumnCount(); i++) {
+    for (let i = 0; i < statement.getColumnCount(); i++) {
       columns.push(statement.getValue(i).columnInfo.getAccessString());
     }
     return columns;
@@ -66,51 +66,66 @@ export class DataExporter {
       operation: MassPropertiesOperation.AccumulateVolumes,
       candidates: ids,
     };
+    
     const requestContext = new BackendRequestContext();
     const result = await this.iModelDb.getMassProperties(requestContext, requestProps);
 
     return result;
-
   }
 
-  public async writeVolumes(ecSql: string, fileName: string): Promise<void> {
-    const outputFileName = path.join(this.outputDir, fileName);
-    const writeStream = fs.createWriteStream(outputFileName);
-    const ids: Id64Array = [];
-
-    this.iModelDb.withPreparedStatement(ecSql, (statement: ECSqlStatement): void => {
-      while (DbResult.BE_SQLITE_ROW === statement.step()) {
-        ids.push(statement.getValue(0).getId());
-      }
-    });
-
-    const result = await this.calculateVolume(ids);
-    writeStream.write(JSON.stringify(result.volume));
-  }
-
-  public async writeVolumes2(ecSql: string, fileName: string): Promise<void> {
+  public async writeVolumesForSingles(ecSql: string, fileName: string): Promise<void> {
     const outputFileName = path.join(this.outputDir, fileName);
     const writeStream = fs.createWriteStream(outputFileName);
     let rowCount = 0;
-    const header: string[] = ["volume"];
-    
+    let id: Id64Array = [];
+    const header: string[] = ["volume","area"];
+
     await this.iModelDb.withPreparedStatement(ecSql, async (statement: ECSqlStatement): Promise<void> => {
-      while (DbResult.BE_SQLITE_ROW === statement.step()) {
-        if (0 === rowCount) {
-          header.push (...this.getColumns(statement));
-          const outHeader = header.join(';');
-          writeStream.write(`${outHeader}\n`);
-        }
+      if (0 === rowCount) {
+        header.push (...this.getColumns(statement));
+        const outHeader = header.join(';');
+        writeStream.write(`${outHeader}\n`);
+      }
 
-        const parsedIds: Id64Array = <Id64Array>JSON.parse(statement.getValue(0).getString());
-        const result = await this.calculateVolume(parsedIds);          
+      while (DbResult.BE_SQLITE_ROW === statement.step()) {     
+        id.push(statement.getValue(0).getId());
+        const result = await this.calculateVolume(id);
         const stringifiedRow = this.rowToString(statement);
-        writeStream.write(`${result.volume};${stringifiedRow}\n`);
+        writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
 
-        ++rowCount;
-        console.log(`Volumes2 has written row # ${rowCount}`);
+        rowCount++;
+        id = [];
       }
     });
+    writeStream.end();
+  }
+
+  public async writeVolumesForGroups(ecSql: string, fileName: string): Promise<void> {
+    const outputFileName = path.join(this.outputDir, fileName);
+    const writeStream = fs.createWriteStream(outputFileName);
+    let rowCount = 0;
+    const header: string[] = ["volume","area"];
+    
+    await this.iModelDb.withPreparedStatement(ecSql, async (statement: ECSqlStatement): Promise<void> => {
+      if (0 === rowCount) {
+        header.push ("CodeValue");
+        const outHeader = header.join(';');
+        writeStream.write(`${outHeader}\n`);
+      }
+
+      while (DbResult.BE_SQLITE_ROW === statement.step()) {
+        const parsedIds: Id64Array = <Id64Array>JSON.parse(statement.getValue(0).getString());
+        const result = await this.calculateVolume(parsedIds);      
+        writeStream.write(`${result.volume};${result.area};${statement.getValue(1).getString()}\n`);
+        ++rowCount;
+      }
+    });
+
+    writeStream.on("finish", () => {
+      console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
+    });
+
+    writeStream.end();
   }
 
   public writeQueryResultsToCsvFile(ecSql: string, fileName: string): void {

@@ -12,8 +12,8 @@ import * as path from "path";
 
 describe("DataExporter.test.ts",()=> {
   let sourceDbFile = "";
-  let sourceDb: any;
-  let userdata : any;
+  let sourceDb: SnapshotDb;
+  let userdata: any;
 
   before(async () => {
     await IModelHost.startup();
@@ -31,18 +31,19 @@ describe("DataExporter.test.ts",()=> {
   after( async ()=> { await IModelHost.shutdown(); });
 
   it("CSV files are correctly generated from imodel", async ()=> {
-    const exporter:any = new DataExporter(sourceDb);
+    const exporter = new DataExporter(sourceDb);
     userdata = require("./assets/TestQueries.json");
-    exporter.setfolder(userdata.folder);
-    const outFiles = Object.keys(userdata.queries).map(file => userdata.queries[file].store+".csv");
+    const genericFolder = `${userdata.folder}/test`;
+    exporter.setfolder(genericFolder);
+    const outFiles = Object.keys(userdata.queries["test"]).map(file => userdata.queries["test"][file].store+".csv");
 
-      for (const querykey of Object.keys(userdata.queries)) {
-        const aQuery:any = userdata.queries[querykey];
-        exporter.writeQueryResultsToCsvFile(aQuery.query,aQuery.store + ".csv");
-      }
-      const outDir = path.join(__dirname, "/../../out/" + userdata.folder);
+    for (const querykey of Object.keys(userdata.queries["test"])) {
+      const aQuery = userdata.queries["test"][querykey];
+      exporter.writeQueryResultsToCsvFile(aQuery.query,aQuery.store + ".csv");
+    }
+    const outDir = path.join(__dirname, "/../../out/" + genericFolder);
 
-      expect(IModelJsFs.existsSync(outDir)).to.equal(true);
-      expect(IModelJsFs.readdirSync(outDir)).to.have.members(outFiles);
+    expect(IModelJsFs.existsSync(outDir)).to.equal(true);
+    expect(IModelJsFs.readdirSync(outDir)).to.have.members(outFiles);
   });
 });

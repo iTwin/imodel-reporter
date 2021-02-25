@@ -4,13 +4,15 @@
     "url" : "",
     "folder" : "./Unittest",
     "queries": {
-        "Schema": {
-            "store" : "SchemaDefs",
-            "query" : "select * from meta.ecschemadef"
-        },
-        "Class": {
-            "store" : "ClassDefs",
-            "query" : "select * from meta.ecclassdef"
-        }
+        "test": {
+            "Schema": {
+                "store" : "SchemaDefs",
+                "query" : "select * from meta.ecschemadef"
+            },
+            "Class": {
+                "store" : "ClassDefs",
+                "query" : "select * from meta.ecclassdef"
+            }
+        } 
     }
 }

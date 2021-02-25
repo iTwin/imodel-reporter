@@ -76,32 +76,31 @@ export async function main(process: NodeJS.Process): Promise<void> {
     console.log("\nFinished opening iModel");
 
     const exporter = new DataExporter(iModelDb);
-    exporter.setfolder(userdata.folder);
 
     let queryCount = 0;
-    for (const querykey of Object.keys(userdata.queries)) {
-      queryCount++;
-      const aQuery = userdata.queries[querykey];
-      exporter.writeQueryResultsToCsvFile(aQuery.query,aQuery.store + ".csv");
+    for (const group of Object.keys(userdata.queries)) {
+      exporter.setfolder(`${userdata.folder}/${group}`); // create a new folder for each queries group
+      for (const querykey of Object.keys(userdata.queries[group])) {
+        const aQuery = userdata.queries[group][querykey];
+        switch (group) {
+          case "generic":
+            exporter.writeQueryResultsToCsvFile(aQuery.query, aQuery.store + ".csv");
+            break;
+          case "volumeQueriesForSingleIds":
+            await exporter.writeVolumesForSingles(aQuery.query,  aQuery.store + ".csv");
+            break;
+          case "volumeQueriesForGroupIds":
+            await exporter.writeVolumesForGroups(aQuery.query, aQuery.store + ".csv");
+            break;
+          default:
+            console.error(`No such query group: ${group}`);
+        }
+        queryCount++;
+      }
+      console.log(`Number of Queries = ${queryCount}`);
+      queryCount = 0;
     }
 
-    console.log(`Number of Queries = ${queryCount}`);
-    queryCount = 0;
-    for (const querykey of Object.keys(userdata.volumeQueries)) {
-      queryCount++;
-      const aQuery = userdata.volumeQueries[querykey];
-      await exporter.writeVolumes(aQuery.query, aQuery.store + ".csv");
-    }
-
-    console.log(`Number of Queries = ${queryCount}`);
-    queryCount = 0;
-    for (const querykey of Object.keys(userdata.volumeQueries2)) {
-      queryCount++;
-      const aQuery = userdata.volumeQueries2[querykey];
-      await exporter.writeVolumes2(aQuery.query, aQuery.store + ".csv");
-    }
-    
-    console.log(`Number of Queries = ${queryCount}`);
     iModelDb.close();
   } catch (error) {
     console.error(error.message + "\n" + error.stack);
