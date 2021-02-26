@@ -76,29 +76,11 @@ export async function main(process: NodeJS.Process): Promise<void> {
     console.log("\nFinished opening iModel");
 
     const exporter = new DataExporter(iModelDb);
-
-    let queryCount = 0;
-    for (const group of Object.keys(userdata.queries)) {
-      exporter.setfolder(`${userdata.folder}/${group}`); // create a new folder for each queries group
-      for (const querykey of Object.keys(userdata.queries[group])) {
-        const aQuery = userdata.queries[group][querykey];
-        switch (group) {
-          case "generic":
-            exporter.writeQueryResultsToCsvFile(aQuery.query, aQuery.store + ".csv");
-            break;
-          case "volumeQueriesForSingleIds":
-            await exporter.writeVolumesForSingles(aQuery.query,  aQuery.store + ".csv");
-            break;
-          case "volumeQueriesForGroupIds":
-            await exporter.writeVolumesForGroups(aQuery.query, aQuery.store + ".csv");
-            break;
-          default:
-            console.error(`No such query group: ${group}`);
-        }
-        queryCount++;
-      }
-      console.log(`Number of Queries = ${queryCount}`);
-      queryCount = 0;
+    exporter.setfolder(userdata.folder);
+   
+    for (const querykey of Object.keys(userdata.queries)) {
+      const aQuery = userdata.queries[querykey];
+      await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
     }
 
     iModelDb.close();

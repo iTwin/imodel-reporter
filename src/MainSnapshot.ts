@@ -35,28 +35,9 @@ export async function mainSnapshot(process: NodeJS.Process): Promise<void> {
     const exporter = new DataExporter(sourceDb);
     exporter.setfolder(userdata.folder);
 
-    let queryCount = 0;
-    for (const group of Object.keys(userdata.queries)) {
-      exporter.setfolder(`${userdata.folder}/${group}`); // create a new folder for each queries group
-      for (const querykey of Object.keys(userdata.queries[group])) {
-        const aQuery = userdata.queries[group][querykey];
-        switch (group) {
-          case "generic":
-            exporter.writeQueryResultsToCsvFile(aQuery.query, aQuery.store + ".csv");
-            break;
-          case "volumeQueriesForSingleIds":
-            await exporter.writeVolumesForSingles(aQuery.query,  aQuery.store + ".csv");
-            break;
-          case "volumeQueriesForGroupIds":
-            await exporter.writeVolumesForGroups(aQuery.query, aQuery.store + ".csv");
-            break;
-          default:
-            console.error(`No such query group: ${group}`);
-        }
-        queryCount++;
-      }
-      console.log(`Number of Queries = ${queryCount}`);
-      queryCount = 0;
+    for (const querykey of Object.keys(userdata.queries)) {
+      const aQuery = userdata.queries[querykey];
+      await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
     }
 
     sourceDb.close();
