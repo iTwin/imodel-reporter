@@ -39,7 +39,6 @@ describe("DataExporter.test.ts",()=> {
 
     for (const querykey of Object.keys(userdata.queries)) {
       const aQuery = userdata.queries[querykey];
-      console.log(aQuery.query);
       await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
     }
    const outDir = path.join(__dirname, "/../../out/" + userdata.folder);

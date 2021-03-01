@@ -161,5 +161,8 @@ npm run test
 
 It will create TestiModel.bim file and run test queries from TestQueries.json.
 
-Existing tests check if:
+### Existing tests check:
     * CSV files are correctly generated from imodel.
+    * Should assign default values to query options, if options are not provided
+    * Should not assign default values to already defined options
+    * Should return object's volume as zero if it's volume is undefined
