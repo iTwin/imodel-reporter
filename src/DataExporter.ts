@@ -9,7 +9,7 @@ import * as path from "path";
 import * as  fs  from "fs";
 
 const loggerCategory = "DataExporter";
-interface Options {
+export interface Options {
   calculateMassProperties: boolean;
   idColumn: number;
   idColumnIsJsonArray: boolean;
@@ -75,78 +75,63 @@ export class DataExporter {
     
     const requestContext = new BackendRequestContext();
     const result = await this.iModelDb.getMassProperties(requestContext, requestProps);
+
+    // Trying to calculate volume on 2d geometry returns volume as undefined
+    result.volume = result.volume || 0;
+    // Trying to calculate perimeter on 3d geometry returns perimeter as undefined
+    result.perimeter = result.perimeter || 0;
    
     return result;
   }
 
-  public async writeQueryResultsToCsv(ecSql: string, fileName: string, options:  Partial<Options> = {}): Promise<void> {
-    const outputFileName: string = path.join(this.outputDir, fileName); 
-    
+  private assignDefaultOptions(options:  Partial<Options> = {}): Options {
     const opts = Object.assign({
       calculateMassProperties: false,
       idColumn: 0,
       idColumnIsJsonArray: false,
     }, options);
 
+    return opts;
+  }
+
+  public async writeQueryResultsToCsv(ecSql: string, fileName: string, options:  Partial<Options> = {}): Promise<void> {
+    const outputFileName: string = path.join(this.outputDir, fileName); 
+    const opts = this.assignDefaultOptions(options);
+    
     await this.iModelDb.withPreparedStatement(ecSql, async (statement: ECSqlStatement): Promise<void> => {     
-        if (opts.calculateMassProperties === true) {
-          await this.writeVolume(statement, outputFileName, opts);
-        } else {
-          await this.defaultWrite(statement, outputFileName);
-        }
-      }
-    );
+      await this.writeQueries(statement, outputFileName, opts);
+      });
   }
 
-  private async writeVolume(statement: ECSqlStatement, outputFileName: string, options: Options): Promise<void> {
+  private async writeQueries(statement: ECSqlStatement, outputFileName: string, options: Options): Promise<void> {
     const writeStream = fs.createWriteStream(outputFileName);
-    let rowCount = 0;
     let ids: Id64Array = [];
-    const header: string[] = ["volume","area"];
+    let result: MassPropertiesResponseProps | undefined;
 
-    let outHeader: string;
-    if (options.idColumnIsJsonArray) {
-      header.push("CodeValue");
-      outHeader = header.join(';');
-    } else {
-      outHeader = this.makeHeader(header, statement)    
-    }
-    writeStream.write(`${outHeader}\n`);
-
-    while (DbResult.BE_SQLITE_ROW === statement.step()) {
-      let result;
-      if(options.idColumnIsJsonArray === true) {
-        const parsedIds: Id64Array = <Id64Array>JSON.parse(statement.getValue(options.idColumn).getString());
-        result = await this.calculateVolume(parsedIds);
-        writeStream.write(`${result.volume};${result.area};${statement.getValue(1).getString()}\n`);      
-      } else {
-        const stringifiedRow = this.rowToString(statement);
-        ids.push(statement.getValue(options.idColumn).getId());
-        result = await this.calculateVolume(ids)
-        ids = [];
-        writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
-      }
-      ++rowCount;
-    }
-
-    writeStream.on("finish", () => {
-     console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
-    });
-
-    writeStream.end();
-  }
-
-  private async defaultWrite(statement: ECSqlStatement, outputFileName: string): Promise<void> {
-    const writeStream = fs.createWriteStream(outputFileName);
-    const outHeader = this.makeHeader([], statement)
+    const header: string[] = (options.calculateMassProperties) ? ["volume","area"] : [];
+    const outHeader = this.makeHeader(header, statement)
     writeStream.write(`${outHeader}\n`);
     
     let rowCount = 0;
     while (DbResult.BE_SQLITE_ROW === statement.step()) {
-      const stringifiedRow = this.rowToString(statement);
-      writeStream.write(`${stringifiedRow}\n`);
-      rowCount++;
-    }
+      const stringifiedRow = this.rowToString(statement);   
+      if (options.calculateMassProperties === true) {
+        if (options.idColumnIsJsonArray === true) {
+          const parsedIds: Id64Array = <Id64Array>JSON.parse(statement.getValue(options.idColumn).getString());
+          result = await this.calculateVolume(parsedIds);
+        }
+        else {
+          ids.push(statement.getValue(options.idColumn).getId());
+          result = await this.calculateVolume(ids)
+          ids = [];
+        }
+        writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
+      }
+      else {
+        writeStream.write(`${stringifiedRow}\n`);  
+      }         
+      rowCount++; 
+    }    
 
     writeStream.on("finish", () => {
       console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
