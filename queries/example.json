@@ -1,7 +1,7 @@
 {    
     "name": "example",
     "description": "simple example queries on how tool works",
-    "url" : "https://connect-imodelweb.bentley.com/imodeljs/?projectId=84869c95-46f4-4c99-a9d0-144a267db609&iModelId=488ec3ce-eb6b-4996-8279-5069b734fae4",
+    "url" : "https://connect-imodelweb.bentley.com/imodeljs/?projectId=<put your project id here>&iModelId=<put your model id here>&ChangeSetId=<put your changeset id here>",
     "folder" : "./example",
     "queries" : {
         "schema" : {

@@ -7,6 +7,7 @@ import { IModelHost, DesktopAuthorizationClient, BriefcaseDb, BriefcaseManager, 
 import { DesktopAuthorizationClientConfiguration, IModelVersion } from "@bentley/imodeljs-common";
 import { AccessToken, AuthorizedClientRequestContext } from "@bentley/itwin-client";
 import { DataExporter } from "./DataExporter";
+import readline = require('readline');
 
 async function signIn(): Promise<AccessToken|undefined> {
 
@@ -59,7 +60,7 @@ export async function main(process: NodeJS.Process): Promise<void> {
     // If this function returns non-zero, the download is aborted.
     const progressTracking: ProgressFunction = (loaded: number, total: number):  number => {
       const percent = loaded/total*100;
-      process.stdout.cursorTo(0);
+      readline.cursorTo(process.stdout, 0);
       process.stdout.write(`Downloaded: ${percent.toFixed(2)} %`);
 
       return 0;
