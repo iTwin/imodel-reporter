@@ -122,7 +122,7 @@ export class DataExporter {
         else
           ids = [statement.getValue(options.idColumn).getId()];
 
-        let result = await this.calculateVolume(ids)
+        const result = await this.calculateVolume(ids)
         writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
       }
       else {
