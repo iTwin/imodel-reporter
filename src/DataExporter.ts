@@ -9,11 +9,19 @@ import * as path from "path";
 import * as  fs  from "fs";
 
 const loggerCategory = "DataExporter";
+
 export interface Options {
   calculateMassProperties: boolean;
   idColumn: number;
   idColumnIsJsonArray: boolean;
 }
+
+const defaultOptions: Options = {
+  calculateMassProperties: false,
+  idColumn: 0,
+  idColumnIsJsonArray: false,
+};
+
 export class DataExporter {
   private iModelDb: IModelDb;
   private outputDir: string;
@@ -84,14 +92,8 @@ export class DataExporter {
     return result;
   }
 
-  private assignDefaultOptions(options:  Partial<Options> = {}): Options {
-    const opts = Object.assign({
-      calculateMassProperties: false,
-      idColumn: 0,
-      idColumnIsJsonArray: false,
-    }, options);
-
-    return opts;
+  private assignDefaultOptions(options: Partial<Options> = {}): Options {
+    return {...defaultOptions, ...options};
   }
 
   public async writeQueryResultsToCsv(ecSql: string, fileName: string, options:  Partial<Options> = {}): Promise<void> {
@@ -106,7 +108,6 @@ export class DataExporter {
   private async writeQueries(statement: ECSqlStatement, outputFileName: string, options: Options): Promise<void> {
     const writeStream = fs.createWriteStream(outputFileName);
     let ids: Id64Array = [];
-    let result: MassPropertiesResponseProps | undefined;
 
     const header: string[] = (options.calculateMassProperties) ? ["volume","area"] : [];
     const outHeader = this.makeHeader(header, statement)
@@ -116,15 +117,12 @@ export class DataExporter {
     while (DbResult.BE_SQLITE_ROW === statement.step()) {
       const stringifiedRow = this.rowToString(statement);   
       if (options.calculateMassProperties === true) {
-        if (options.idColumnIsJsonArray === true) {
-          const parsedIds: Id64Array = <Id64Array>JSON.parse(statement.getValue(options.idColumn).getString());
-          result = await this.calculateVolume(parsedIds);
-        }
-        else {
-          ids.push(statement.getValue(options.idColumn).getId());
-          result = await this.calculateVolume(ids)
-          ids = [];
-        }
+        if (options.idColumnIsJsonArray === true)
+          ids = <Id64Array>JSON.parse(statement.getValue(options.idColumn).getString());
+        else
+          ids = [statement.getValue(options.idColumn).getId()];
+
+        let result = await this.calculateVolume(ids)
         writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
       }
       else {
