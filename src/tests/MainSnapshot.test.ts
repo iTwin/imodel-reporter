@@ -52,9 +52,9 @@ describe("DataExporter.test.ts",()=> {
     {
       const exporter = new DataExporter(sourceDb);    
       const options = exporter["assignDefaultOptions"]();
-      expect(options.calculateMassProperties === false);
-      expect(options.idColumn === 0);
-      expect(options.idColumnIsJsonArray === false);
+      expect(options.calculateMassProperties).is.false;
+      expect(options.idColumn).is.equal(0)
+      expect(options.idColumnIsJsonArray).is.false;
     });
 
     it ("Should not assign default values to already defined options", () => {
@@ -65,9 +65,9 @@ describe("DataExporter.test.ts",()=> {
         idColumnIsJsonArray: true
       }
       const opts = exporter["assignDefaultOptions"](options);
-      expect(opts.calculateMassProperties === true);
-      expect(opts.idColumn === 15);
-      expect(opts.idColumnIsJsonArray === true);
+      expect(opts.calculateMassProperties).is.true;
+      expect(opts.idColumn).to.equal(15);
+      expect(opts.idColumnIsJsonArray).is.true;
     })
   });
 
@@ -76,7 +76,7 @@ describe("DataExporter.test.ts",()=> {
       const exporter = new DataExporter(sourceDb);
       const ids: Id64Array = ['0x2b']; //Id of existing 2dgeometry element from the test iModel.
       const results = await exporter["calculateVolume"](ids);
-      expect(results.volume !== undefined);
+      expect(results.volume).is.equal(0); 
       }
     )});
 });
