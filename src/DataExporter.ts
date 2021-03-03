@@ -117,12 +117,14 @@ export class DataExporter {
     while (DbResult.BE_SQLITE_ROW === statement.step()) {
       const stringifiedRow = this.rowToString(statement);   
       if (options.calculateMassProperties === true) {
-        if (options.idColumnIsJsonArray === true)
+        if (options.idColumnIsJsonArray === true) {
           ids = <Id64Array>JSON.parse(statement.getValue(options.idColumn).getString());
-        else
+        }
+        else {
           ids = [statement.getValue(options.idColumn).getId()];
+        }
 
-        const result = await this.calculateVolume(ids)
+        const result = await this.calculateVolume(ids);
         writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
       }
       else {

@@ -52,7 +52,8 @@ export async function main(process: NodeJS.Process): Promise<void> {
 
     const version = changeSetId === '' ? IModelVersion.latest() : IModelVersion.asOfChangeSet(changeSetId);
 
-    if (projectId === '' || iModelId === '') {
+    const guidRegex = new RegExp("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}");
+    if (!guidRegex.test(projectId) || !guidRegex.test(iModelId)) {
       console.error("Error in parsing url from query");
       return;
     }

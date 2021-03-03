@@ -8,23 +8,21 @@
           "query" :"SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
          },
         "class" : {
-          "info" : "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
           "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
         },
         "3dElements" : {
-          "store" : "3dElements",
           "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
         },
         "2dElements" : {
-          "store" : "2dElements",
           "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"          
         },
         "volumeForSingleIds": {
+          "info" : "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
           "query" : "SELECT ECInstanceId FROM BisCore.PhysicalElement LIMIT 100",
           "options" : {
-          "calculateMassProperties" : true,
-          "idColumn" : 0,
-          "idColumnIsJsonArray" : false
+            "calculateMassProperties" : true,
+            "idColumn" : 0,
+            "idColumnIsJsonArray" : false
           }
         },
         "volumeForGroupIds": {

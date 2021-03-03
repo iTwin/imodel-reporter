@@ -64,15 +64,16 @@ Query file structure below.
 | **url**            | link to your iModel project  							                        |
 | **folder**         | name of the folder where queries results will be saved                           |
 | **queries**        | array for your queries						                                    |
-| **store**          | file name in which query results will be stored                                  |
+| **info**           | (optional) info about the query                                                  |
 | **query**          | ECsql query to be executed        						                        |
+| **options**        | query options, if none are specified default ones will be used instead           |
 
 ### Example query
 
 An example query file with four simple queries.
 
 Example supports three types of queries: generic queries; calculating volume of single physical element; calculating total volume sum of group of elements. 
-> **Note! <b>Don't forget to change url to accessible iModel if you want to run this example<b>**
+> **Note! <b>Don't forget to change url to accessible iModel if you want to run this example</b>**
 
 ```
 {    
@@ -80,37 +81,36 @@ Example supports three types of queries: generic queries; calculating volume of 
     "description": "simple example queries on how tool works",
     "url" : "https://connect-imodelweb.bentley.com/imodeljs/?projectId=<put your project id here>&iModelId=<put your model id here>&ChangeSetId=<put your changeset id here>",
     "folder" : "./example",
-    "queries": {
-        "generic": {
-            "schema": {
-                "store" : "schema",
-                "query" : "SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
-            },
-            "classes" : {
-                "store" : "class",
-                "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
-            },
-            "3dElements" : {
-                "store" : "3dElements",
-                "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
-            },
-	        "2dElements" : {
-                "store" : "2dElements",
-                "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"
-            }
+    "queries" : {
+        "schema" : {
+          "query" :"SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
+         },
+        "class" : {
+          "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
         },
-        "volumeQueriesForSingleIds": {
-            "singleIds": {
-                "store" : "singleIds",
-                "query" : "SELECT ECInstanceId FROM bis.PhysicalElement LIMIT 100"
-            }
+        "3dElements" : {
+          "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
         },
-        "volumeQueriesForGroupIds": {
-			"groupedIds" : {
-                "store" : "groupedIds",
-                "query" : "SELECT json_group_array(IdToHex(e.ECInstanceId)) as id_list, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id"
-            }
-        }                
+        "2dElements" : {
+          "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"          
+        },
+        "volumeForSingleIds": {
+          "info" : "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
+          "query" : "SELECT ECInstanceId FROM BisCore.PhysicalElement LIMIT 100",
+          "options" : {
+            "calculateMassProperties" : true,
+            "idColumn" : 0,
+            "idColumnIsJsonArray" : false
+          }
+        },
+        "volumeForGroupIds": {
+          "query" : "SELECT json_group_array(IdToHex(e.ECInstanceId)) as id_list, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id",
+          "options" : {
+            "calculateMassProperties" : true,
+            "idColumn" : 0,
+            "idColumnIsJsonArray" : true
+          }
+       }           
     }
 }
 ```
@@ -118,15 +118,12 @@ Running example queries file should create a new folder with a structure like th
 
 ```
 /out/example
-    |-->generic
-        |-->schema.csv
-        |-->classes.csv
-        |-->3dElements.csv
-        |-->2dElements.csv
-    |-->volumeQueriesForSingleIds
-        |-->singleIds
-    |-->volumeQueriesForGroupIds
-        |-->groupedIds
+    |-->schema.csv
+    |-->class.csv
+    |-->3dElements.csv
+    |-->2dElements.csv
+    |-->volumeForSingleIds.csv
+    |-->volumeForGroupIds.csv
 ```
 
 ## Project Structure
@@ -149,7 +146,7 @@ The full folder structure of this app is explained below:
 | package.json             | File that contains npm dependencies as well as build scripts                                  |
 | tsconfig.json            | Config settings for compiling server code written in TypeScript                               |
 | .eslintrc                | Config settings for ESLint code style checking                                                |
-| .eslintignore            | Config settings for paths to exclude from linting  			
+| .eslintignore            | Config settings for paths to exclude from linting  			                               |
 
 ## Testing
 
