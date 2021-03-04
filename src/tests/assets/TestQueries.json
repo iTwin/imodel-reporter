@@ -1,16 +1,37 @@
-{
+{    
     "name": "test",
-    "description": "Simple test queries",
+    "description": "testing example queries",
     "url" : "",
     "folder" : "./Unittest",
-    "queries": {
-        "Schema": {
-            "store" : "SchemaDefs",
-            "query" : "select * from meta.ecschemadef"
+    "queries" : {
+        "schema" : {
+          "query" :"SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
+         },
+        "class" : {
+          "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
         },
-        "Class": {
-            "store" : "ClassDefs",
-            "query" : "select * from meta.ecclassdef"
-        }
+        "3dElements" : {
+          "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
+        },
+        "2dElements" : {
+          "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"          
+        },
+        "volumeForSingleIds": {
+          "query" : "SELECT ECInstanceId FROM BisCore.PhysicalElement LIMIT 100",
+          "info" : "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
+          "options" : {
+            "calculateMassProperties" : true,
+            "idColumn" : 0,
+            "idColumnIsJsonArray" : false
+          }
+        },
+        "volumeForGroupIds": {
+          "query" : "SELECT json_group_array(IdToHex(e.ECInstanceId)) as id_list, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id",
+          "options" : {
+            "calculateMassProperties" : true,
+            "idColumn" : 0,
+            "idColumnIsJsonArray" : true
+          }
+       }           
     }
 }

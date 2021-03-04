@@ -7,6 +7,7 @@ import { IModelHost, DesktopAuthorizationClient, BriefcaseDb, BriefcaseManager, 
 import { DesktopAuthorizationClientConfiguration, IModelVersion } from "@bentley/imodeljs-common";
 import { AccessToken, AuthorizedClientRequestContext } from "@bentley/itwin-client";
 import { DataExporter } from "./DataExporter";
+import readline = require('readline');
 
 async function signIn(): Promise<AccessToken|undefined> {
 
@@ -20,7 +21,7 @@ async function signIn(): Promise<AccessToken|undefined> {
   const requestContext = new ClientRequestContext();
   await client.initialize(requestContext);
 
-  return new Promise<AccessToken | undefined>((resolve, _reject) => {
+  return new Promise<AccessToken | undefined>((resolve) => {
     client.onUserStateChanged.addListener((token: AccessToken | undefined) => resolve(token));
     client.signIn(requestContext);
   });
@@ -51,7 +52,8 @@ export async function main(process: NodeJS.Process): Promise<void> {
 
     const version = changeSetId === '' ? IModelVersion.latest() : IModelVersion.asOfChangeSet(changeSetId);
 
-    if (projectId === '' || iModelId === '') {
+    const guidRegex = new RegExp("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}");
+    if (!guidRegex.test(projectId) || !guidRegex.test(iModelId)) {
       console.error("Error in parsing url from query");
       return;
     }
@@ -59,7 +61,7 @@ export async function main(process: NodeJS.Process): Promise<void> {
     // If this function returns non-zero, the download is aborted.
     const progressTracking: ProgressFunction = (loaded: number, total: number):  number => {
       const percent = loaded/total*100;
-      process.stdout.cursorTo(0);
+      readline.cursorTo(process.stdout, 0);
       process.stdout.write(`Downloaded: ${percent.toFixed(2)} %`);
 
       return 0;
@@ -76,16 +78,13 @@ export async function main(process: NodeJS.Process): Promise<void> {
     console.log("\nFinished opening iModel");
 
     const exporter = new DataExporter(iModelDb);
-    exporter.setfolder(userdata.folder)
-
-    let queryCount = 0;
+    exporter.setfolder(userdata.folder);
+   
     for (const querykey of Object.keys(userdata.queries)) {
-      queryCount++;
       const aQuery = userdata.queries[querykey];
-      exporter.writeQueryResultsToCsvFile(aQuery.query,aQuery.store + ".csv");
+      await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
     }
 
-    console.log(`Number of Queries = ${queryCount}`);
     iModelDb.close();
   } catch (error) {
     console.error(error.message + "\n" + error.stack);

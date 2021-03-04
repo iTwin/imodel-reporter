@@ -13,7 +13,8 @@ export async function mainSnapshot(process: NodeJS.Process): Promise<void> {
     const fileName: string = process.argv[2];
     const json: string = process.argv[3];
 
-    IModelHost.startup();
+    await IModelHost.startup();
+    
     if (fileName === undefined) {
       console.error("Filename not provided");
       return;
@@ -28,21 +29,16 @@ export async function mainSnapshot(process: NodeJS.Process): Promise<void> {
         userdata = require(json);
     }
 
-    await IModelHost.startup();
-
     const sourceDbFile = fileName;
     const sourceDb = SnapshotDb.openFile(sourceDbFile);
     const exporter = new DataExporter(sourceDb);
     exporter.setfolder(userdata.folder);
 
-    let queryCount = 0;
     for (const querykey of Object.keys(userdata.queries)) {
-      queryCount++;
       const aQuery = userdata.queries[querykey];
-      exporter.writeQueryResultsToCsvFile(aQuery.query, aQuery.store + ".csv");
+      await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
     }
 
-    console.log(`Number of Queries = ${queryCount}`);
     sourceDb.close();
   } catch (error) {
     console.error(`${error.message} \n ${error.stack}`);
