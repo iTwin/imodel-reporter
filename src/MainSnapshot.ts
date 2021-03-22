@@ -36,7 +36,8 @@ export async function mainSnapshot(process: NodeJS.Process): Promise<void> {
 
     for (const querykey of Object.keys(userdata.queries)) {
       const aQuery = userdata.queries[querykey];
-      await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
+      const outFileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
+      await exporter.writeQueryResultsToCsv(aQuery.query, outFileName, aQuery.options)
     }
 
     sourceDb.close();

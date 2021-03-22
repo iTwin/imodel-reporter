@@ -10,10 +10,12 @@
         "class" : {
           "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
         },
-        "3dElements" : {
+        "3dElement" : {
+          "store" : "3dElements",
           "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
         },
-        "2dElements" : {
+        "2dElement" : {
+          "store" : "2dElements",
           "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"          
         },
         "volumeForSingleIds": {
