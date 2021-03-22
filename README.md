@@ -73,9 +73,9 @@ Query file structure below.
 An example query file with four simple queries.
 
 Example supports three types of queries: generic queries; calculating volume of single physical element; calculating total volume sum of group of elements. 
-> **Note! <b>Don't forget to change url to accessible iModel if you want to run this example</b>**
+> Note: **Don't forget to change url to accessible iModel if you want to run this example**
 
-```
+```json
 {    
     "name": "example",
     "description": "simple example queries on how tool works",
@@ -83,19 +83,24 @@ Example supports three types of queries: generic queries; calculating volume of 
     "folder" : "./example",
     "queries" : {
         "schema" : {
-          "query" :"SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
+          "store" : "schema",
+          "query" : "SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
          },
         "class" : {
+          "store" : "class",
           "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
         },
         "3dElements" : {
+          "store" : "3dElements",
           "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
         },
         "2dElements" : {
+          "store" : "2dElements",
           "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"          
         },
         "volumeForSingleIds": {
           "info" : "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
+          "store" : "volumeForSingleIds",
           "query" : "SELECT ECInstanceId FROM BisCore.PhysicalElement LIMIT 100",
           "options" : {
             "calculateMassProperties" : true,
@@ -104,6 +109,7 @@ Example supports three types of queries: generic queries; calculating volume of 
           }
         },
         "volumeForGroupIds": {
+          "store" : "volumeForGroupIds",
           "query" : "SELECT json_group_array(IdToHex(e.ECInstanceId)) as id_list, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id",
           "options" : {
             "calculateMassProperties" : true,
@@ -114,6 +120,7 @@ Example supports three types of queries: generic queries; calculating volume of 
     }
 }
 ```
+
 Running example queries file should create a new folder with a structure like this:
 
 ```
@@ -133,33 +140,34 @@ The full folder structure of this app is explained below:
 > **Note!** Make sure you have already built the app using `npm run build`
 
 | Name | Description |
-| ------------------------ | --------------------------------------------------------------------------------------------- 
-| **.vscode**              | Contains VS Code specific settings                                                            |
-| **.github**              | Contains Github related files        							                               |
-| **lib**                  | Contains the distributable (or output) from your TypeScript build. This is the code you ship  |
-| **src**                  | Contains source code that will be compiled to the dist dir                               	   |
-| **src/tests**            | Contains tests for the project                                                                |
-| **src/DataExporter.ts**  | Contains code responsible for executing queries and exporting results to csv files            |
-| **src/Main.ts**          | Main entry point for executing queries against remote iModel   						       |
-| **src/MainSnapshot.ts**  | Contains code responsible for executing queries on local snapshot                             |
-| **queries**              | Designated place to store your query files					                                   |
-| package.json             | File that contains npm dependencies as well as build scripts                                  |
-| tsconfig.json            | Config settings for compiling server code written in TypeScript                               |
-| .eslintrc                | Config settings for ESLint code style checking                                                |
-| .eslintignore            | Config settings for paths to exclude from linting  			                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------| 
+| **.vscode**              | Contains VS Code specific settings                                                           |
+| **.github**              | Contains Github related files                                                                |
+| **lib**                  | Contains the distributable (or output) from your TypeScript build. This is the code you ship |
+| **src**                  | Contains source code that will be compiled to the dist dir                                   |
+| **src/tests**            | Contains tests for the project                                                               |
+| **src/DataExporter.ts**  | Contains code responsible for executing queries and exporting results to csv files           |
+| **src/Main.ts**          | Main entry point for executing queries against remote iModel                                 |
+| **src/MainSnapshot.ts**  | Contains code responsible for executing queries on local snapshot                            |
+| **queries**              | Designated place to store your query files                                                   |
+| package.json             | File that contains npm dependencies as well as build scripts                                 |
+| tsconfig.json            | Config settings for compiling server code written in TypeScript                              |
+| .eslintrc                | Config settings for ESLint code style checking                                               |
+| .eslintignore            | Config settings for paths to exclude from linting                                            |
 
 ## Testing
 
 To run tests use command
 
-```
+```bash
 npm run test
 ```
 
 It will create TestiModel.bim file and run test queries from TestQueries.json.
 
-### Existing tests check:
-    * CSV files are correctly generated from imodel.
-    * Should assign default values to query options, if options are not provided
-    * Should not assign default values to already defined options
-    * Should return object's volume as zero if it's volume is undefined
+### Existing tests check
+
+- CSV files are correctly generated from imodel.
+- Should assign default values to query options, if options are not provided
+- Should not assign default values to already defined options
+- Should return object's volume as zero if it's volume is undefined

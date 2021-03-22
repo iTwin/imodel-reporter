@@ -35,11 +35,12 @@ describe("DataExporter.test.ts",()=> {
     const exporter = new DataExporter(sourceDb);
     userdata = require("./assets/TestQueries.json");
     exporter.setfolder(userdata.folder);
-    const outFiles = Object.keys(userdata.queries).map(file => file + ".csv");
+    const outFiles = ["2dElements", "3dElements", "class", "schema", "volumeForGroupIds", "volumeForSingleIds"].map(file => file + ".csv");
 
     for (const querykey of Object.keys(userdata.queries)) {
       const aQuery = userdata.queries[querykey];
-      await exporter.writeQueryResultsToCsv(aQuery.query, querykey + ".csv", aQuery.options)
+      const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
+      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options)
     }
    const outDir = path.join(__dirname, "/../../out/" + userdata.folder);
 
