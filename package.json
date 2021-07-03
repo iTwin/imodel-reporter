@@ -3,30 +3,35 @@
   "license": "MIT",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc 1>&2  && npm run copy:test-assets",
-    "clean": "rimraf lib",
-    "lint": "eslint . --ext .ts",
+    "build": "tsc 1>&2 && npm run copy:test-assets",
+    "clean": "rimraf lib out",
+    "lint": "eslint -f visualstudio \"./src/**/*.ts\" 1>&2",
     "start": "node ./lib/main.js",
     "start:snapshot": "node ./lib/MainSnapshot.js",
     "test": "mocha ./lib/tests/*.test.js",
     "copy:test-assets": "cpx \"./src/tests/assets/**/{*,.*}\" ./lib/tests/assets"
   },
-  "repository": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imodeljs/imodel-reporter"
+  },
   "dependencies": {
-    "@bentley/backend-itwin-client": "^2.13",
-    "@bentley/bentleyjs-core": "^2.13",
-    "@bentley/ecschema-metadata": "^2.13",
-    "@bentley/geometry-core": "^2.13",
-    "@bentley/imodelhub-client": "^2.13",
-    "@bentley/imodeljs-backend": "^2.13",
-    "@bentley/imodeljs-common": "^2.13",
-    "@bentley/itwin-client": "^2.13",
-    "@bentley/rbac-client": "^2.13",
-    "@bentley/telemetry-client": "^2.13",
-    "mocha": "^8.2.1"
+    "@bentley/backend-itwin-client": "^2.17",
+    "@bentley/bentleyjs-core": "^2.17",
+    "@bentley/ecschema-metadata": "^2.17",
+    "@bentley/electron-manager": "^2.17",
+    "@bentley/geometry-core": "^2.17",
+    "@bentley/imodelhub-client": "^2.17",
+    "@bentley/imodeljs-backend": "^2.17",
+    "@bentley/imodeljs-common": "^2.17",
+    "@bentley/itwin-client": "^2.17",
+    "@bentley/rbac-client": "^2.17",
+    "@bentley/telemetry-client": "^2.17",
+    "electron": "^11.1.0"
   },
   "devDependencies": {
-    "@bentley/build-tools": "^2.13",
+    "@bentley/build-tools": "^2.17",
+    "@bentley/eslint-plugin": "^2.17",
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.2.0",
     "@types/node": "^12.18.3",
@@ -35,9 +40,20 @@
     "chai": "^4.2.0",
     "eslint": "^7.19.0",
     "eslint-config-prettier": "^7.2.0",
+    "mocha": "^8.2.1",
     "rimraf": "^2.6.2",
     "ts-node": "^9.1.1",
     "typescript": "~3.7.4"
+  },
+  "eslintConfig": {
+    "plugins": [
+      "@bentley"
+    ],
+    "extends": "plugin:@bentley/imodeljs-recommended",
+    "rules": {
+      "@typescript-eslint/naming-convention": "off",
+      "no-console": "off"
+    }
   },
   "mocha": {
     "timeout": 60000,

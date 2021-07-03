@@ -44,11 +44,11 @@
         <BaseClass>bis:ElementUniqueAspect</BaseClass>
         <ECProperty propertyName="Diameter" typeName="int" />
     </ECEntityClass>
-    <ECEntityClass typeName="TestMultiAspect" >
+    <ECEntityClass typeName="TestMultiAspect">
         <BaseClass>bis:ElementMultiAspect</BaseClass>
         <ECProperty propertyName="TextSize" typeName="double" description="A text size of element"/>
-		<ECProperty propertyName="TextFont" typeName="string" description="A text font of element"/>
-		<ECProperty propertyName="Color" typeName="int" description="A color of element"/>
+        <ECProperty propertyName="TextFont" typeName="string" description="A text font of element"/>
+        <ECProperty propertyName="Color" typeName="int" description="A color of element"/>
     </ECEntityClass>
     <ECEntityClass typeName="KeyWordsElement">
         <BaseClass>bis:PhysicalElement</BaseClass>

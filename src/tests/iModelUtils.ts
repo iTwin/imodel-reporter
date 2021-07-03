@@ -4,16 +4,16 @@
 *--------------------------------------------------------------------------------------------*/
 import { Id64, Id64String } from "@bentley/bentleyjs-core";
 import { Range3d } from "@bentley/geometry-core";
-// tslint:disable-next-line: max-line-length
 import { AuxCoordSystem2d, BackendRequestContext, CategorySelector, DefinitionModel, DocumentListModel, Drawing, DrawingCategory, ElementOwnsMultiAspects, ElementOwnsUniqueAspect, FunctionalSchema, GroupModel, IModelDb, InformationRecordModel, ModelSelector, PhysicalModel, Platform, SpatialCategory, SpatialLocationModel, SubCategory, Subject } from "@bentley/imodeljs-backend";
 import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@bentley/imodeljs-common";
 import { assert } from "chai";
+import * as path from "path";
 
 export async function prepareSourceDb(sourceDb: IModelDb): Promise<void> {
   const requestContext = new BackendRequestContext();
-  const sourceSchemaFileName: string = __dirname + "/assets/TestPropsSchema-33.01.00.00.ecschema.xml";
+  const sourceSchemaFileName: string = path.join(__dirname, "assets", "TestPropsSchema-33.01.00.00.ecschema.xml");
   try {
-  await sourceDb.importSchemas(requestContext, [sourceSchemaFileName]);
+    await sourceDb.importSchemas(requestContext, [sourceSchemaFileName]);
   } catch (e) {
     console.log(e);
   }
@@ -47,8 +47,8 @@ export function populateSourceDb(sourceDb: IModelDb): void {
   assert.isTrue(Id64.isValidId64(codeSpecId1));
   assert.isTrue(Id64.isValidId64(codeSpecId2));
   assert.isTrue(Id64.isValidId64(codeSpecId3));
-  // insert RepositoryModel structure
 
+  // insert RepositoryModel structure
   const subjectId = Subject.insert(sourceDb, IModel.rootSubjectId, "Subject", "Subject Description");
   assert.isTrue(Id64.isValidId64(subjectId));
   const sourceOnlySubjectId = Subject.insert(sourceDb, IModel.rootSubjectId, "Only in Source");
@@ -220,5 +220,4 @@ export function populateSourceDb(sourceDb: IModelDb): void {
   };
   const derivedConcreteElementId = sourceDb.elements.insertElement(derivedConcreteElement);
   assert.isTrue(Id64.isValidId64(derivedConcreteElementId));
-
 }
