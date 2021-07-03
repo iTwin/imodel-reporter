@@ -52,6 +52,7 @@
     "extends": "plugin:@bentley/imodeljs-recommended",
     "rules": {
       "@typescript-eslint/naming-convention": "off",
+      "dot-notation": "off",
       "no-console": "off"
     }
   },
