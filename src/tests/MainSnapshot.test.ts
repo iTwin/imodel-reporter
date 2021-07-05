@@ -43,7 +43,7 @@ describe("DataExporter.test.ts", () => {
       const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
       await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options);
     }
-    const outDir = path.join(__dirname, "..", "..", `out${userdata.folder}`);
+    const outDir = path.join(__dirname, "..", "..", "out", userdata.folder);
 
     expect(IModelJsFs.existsSync(outDir)).to.equal(true);
     expect(IModelJsFs.readdirSync(outDir)).to.have.members(outFiles);
