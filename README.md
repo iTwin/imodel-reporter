@@ -4,7 +4,7 @@
 
 Copyright © Bentley Systems, Incorporated. All rights reserved. See [LICENSE.md](./LICENSE.md) for license terms and full copyright notice.
 
-A simple command line app to generate csv reports from an iModel
+The iModel Reporter is a simple command line app to generate csv reports from an iModel.
 
 ## Table of contents
 
@@ -28,34 +28,30 @@ To build and run this app locally you will need a few things:
 
 ### Creating a test iModel
 
-To successfully run this tool you will need to have an accessible iModel. If you don't have one already [this](https://www.itwinjs.org/learning/tutorials/create-test-imodel-sample/)  guide will help you to create it.
+To successfully run this tool you will need to have an accessible iModel. If you don't have one already [this](https://www.itwinjs.org/learning/tutorials/create-test-imodel-sample/) guide will help you to create it.
 If you want to create iModel in your local environment then follow  [this](https://www.itwinjs.org/learning/tutorials/create-test-imodel-offline/) tutorial.
-
-### Client application registration
-
-Client application registration procedure can be found [here](https://www.itwinjs.org/learning/tutorials/registering-applications/)
 
 ## Getting started
 
 - Clone the repository
 
-```sh
-git clone <github link>
-```
+  ```sh
+  git clone <github link>
+  ```
 
 - Install dependencies
 
-```sh
-cd <project_name>
-npm install
-```
+  ```sh
+  cd <project_name>
+  npm install
+  ```
 
 - Build and run the project
 
-```sh
-npm run build
-npm run start <query.json>           # Run with iModel from hub
-```
+  ```sh
+  npm run build
+  npm run start <query.json>           # Run with iModel from hub
+  ```
 
 To use iModel from your local machine
 

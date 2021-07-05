@@ -11,9 +11,11 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\lib\\Main.js",
+      "program": "${workspaceFolder}/lib/Main.js",
       "preLaunchTask": "tsc: build - tsconfig.json",
-      "args": ["../queries/example.json"],
+      "args": [
+        "../queries/example.json"
+      ],
       "outFiles": [
         "${workspaceFolder}/lib/**/*.js"
       ]
@@ -25,9 +27,12 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}\\lib\\MainSnapshot.js",
+      "program": "${workspaceFolder}/lib/MainSnapshot.js",
       "preLaunchTask": "tsc: build - tsconfig.json",
-      "args": ["./lib/tests/assets/bc.bim", "../queries/example.json"],
+      "args": [
+        "./lib/tests/assets/bc.bim",
+        "../queries/example.json"
+      ],
       "outFiles": [
         "${workspaceFolder}/lib/**/*.js"
       ]
@@ -38,7 +43,7 @@
       "name": "Unit Tests",
       "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
       "args": [
-       "${workspaceFolder}\\lib\\tests\\*.test.js",
+        "${workspaceFolder}\\lib\\tests\\*.test.js",
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": [

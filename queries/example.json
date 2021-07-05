@@ -1,43 +1,43 @@
-{    
-    "name": "example",
-    "description": "simple example queries on how tool works",
-    "url" : "https://connect-imodelweb.bentley.com/imodeljs/?projectId=<put your project id here>&iModelId=<put your model id here>&ChangeSetId=<put your changeset id here>",
-    "folder" : "./example",
-    "queries" : {
-        "schema" : {
-          "store" : "schema",
-          "query" : "SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
-         },
-        "class" : {
-          "info" : "If 'store' is not set the name of the query will be used.  In this case 'class'",
-          "query" : "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"                        
-        },
-        "3dElements" : {
-          "store" : "3dElements",
-          "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
-        },
-        "2dElements" : {
-          "store" : "2dElements",
-          "query" : "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"          
-        },
-        "volumeForSingleIds": {
-          "info" : "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
-          "store" : "volumeForSingleIds",
-          "query" : "SELECT ECInstanceId FROM BisCore.PhysicalElement LIMIT 100",
-          "options" : {
-            "calculateMassProperties" : true,
-            "idColumn" : 0,
-            "idColumnIsJsonArray" : false
-          }
-        },
-        "volumeForGroupIds": {
-          "store" : "volumeForGroupIds",
-          "query" : "SELECT json_group_array(IdToHex(e.ECInstanceId)) as id_list, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id",
-          "options" : {
-            "calculateMassProperties" : true,
-            "idColumn" : 0,
-            "idColumnIsJsonArray" : true
-          }
-       }           
+{
+  "name": "example",
+  "description": "simple example queries on how tool works",
+  "url": "https://connect-imodelweb.bentley.com/imodeljs/?projectId=6f37ef2a-5f5a-4aa5-b52c-2bc60249f975&iModelId=09b2aa7a-f836-4d4c-98c5-fd0add09f26b&ChangeSetId=d37ce777eeaa7cd89326ac0977f0fc7e00bb42ea",
+  "folder": "./example",
+  "queries": {
+    "schema": {
+      "store": "schema",
+      "query": "SELECT DISTINCT schema.Name, schema.VersionMajor, schema.VersionWrite, schema.VersionMinor, schema.DisplayLabel, schema.Description FROM ECDbMeta.ECSchemaDef schema JOIN ECDbMeta.ECClassDef class ON class.Schema.Id = schema.ECInstanceId WHERE class.ECInstanceId in (SELECT DISTINCT(ECClassId) FROM Bis.Element)"
+    },
+    "class": {
+      "info": "If 'store' is not set the name of the query will be used.  In this case 'class'",
+      "query": "SELECT COUNT(e.ECInstanceId) as [Count], e.ECClassId, class.DisplayLabel, class.Description FROM Bis.Element e JOIN ECDbMeta.ECClassDef class ON class.ECInstanceId = e.ECClassId GROUP BY e.ECClassId ORDER BY ec_classname(e.ECClassId)"
+    },
+    "3dElements": {
+      "store": "3dElements",
+      "query": "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement3d element"
+    },
+    "2dElements": {
+      "store": "2dElements",
+      "query": "SELECT element.ECClassId, element.ECInstanceId ElementId, element.UserLabel, element.CodeValue FROM bis.GeometricElement2d element"
+    },
+    "volumeForSingleIds": {
+      "info": "The query above is the bare minimum, info and options may be null calculateMassProperties defaults to false, idColumn defaults to 0 and idColumnIsJsonArray defaults to false.  idColumn gives the position of the column which holds the ids to use when calculating the mass props.",
+      "store": "volumeForSingleIds",
+      "query": "SELECT ECInstanceId FROM BisCore.PhysicalElement LIMIT 100",
+      "options": {
+        "calculateMassProperties": true,
+        "idColumn": 0,
+        "idColumnIsJsonArray": false
+      }
+    },
+    "volumeForGroupIds": {
+      "store": "volumeForGroupIds",
+      "query": "SELECT json_group_array(IdToHex(e.ECInstanceId)) as id_list, c.codevalue FROM bis.physicalElement e JOIN bis.Category c ON e.Category.Id = c.ECInstanceId GROUP BY e.Category.Id",
+      "options": {
+        "calculateMassProperties": true,
+        "idColumn": 0,
+        "idColumnIsJsonArray": true
+      }
     }
+  }
 }

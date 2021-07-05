@@ -19,7 +19,7 @@ async function signIn(): Promise<AccessToken> {
   const config: NativeAppAuthorizationConfiguration = {
     clientId: "imodeljs-electron-samples",
     redirectUri: "http://localhost:3000/signin-callback",
-    scope: "openid email profile organization imodelhub context-registry-service:read-only product-settings-service projectwise-share urlps-third-party offline_access",
+    scope: "openid email profile organization imodelhub context-registry-service:read-only product-settings-service urlps-third-party offline_access",
   };
 
   const client = new ElectronAuthorizationBackend();
