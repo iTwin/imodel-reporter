@@ -106,7 +106,7 @@ export class DataExporter {
   }
 
   private async writeQueries(statement: ECSqlStatement, outputFileName: string, options: Options): Promise<void> {
-    const writeStream = fs.createWriteStream(outputFileName);
+    const writeStream = fs.createWriteStream(outputFileName, { flags: "a" });
     let ids: Id64Array = [];
 
     const header: string[] = (options.calculateMassProperties) ? ["volume", "area"] : [];
@@ -131,10 +131,12 @@ export class DataExporter {
       rowCount++;
     }
 
-    writeStream.on("finish", () => {
-      console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
-    });
-
     writeStream.end();
+    writeStream.close();
+    console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
+    return new Promise((resolve, reject) => {
+      writeStream.on("finish", resolve);
+      writeStream.on("error", reject);
+    });
   }
 }
