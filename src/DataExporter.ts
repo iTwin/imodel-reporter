@@ -139,7 +139,6 @@ export class DataExporter {
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);
       writeStream.end();
-      writeStream.close();
     });
   }
 }
