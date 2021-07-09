@@ -106,12 +106,15 @@ export class DataExporter {
   }
 
   private async writeQueries(statement: ECSqlStatement, outputFileName: string, options: Options): Promise<void> {
-    const writeStream = fs.createWriteStream(outputFileName);
+    const writeHeaders = !fs.existsSync(outputFileName);
+    const writeStream = fs.createWriteStream(outputFileName, { flags: "a" });
     let ids: Id64Array = [];
 
-    const header: string[] = (options.calculateMassProperties) ? ["volume", "area"] : [];
-    const outHeader = this.makeHeader(header, statement);
-    writeStream.write(`${outHeader}\n`);
+    if (writeHeaders) {
+      const header: string[] = (options.calculateMassProperties) ? ["volume", "area"] : [];
+      const outHeader = this.makeHeader(header, statement);
+      writeStream.write(`${outHeader}\n`);
+    }
 
     let rowCount = 0;
     while (DbResult.BE_SQLITE_ROW === statement.step()) {
@@ -131,10 +134,11 @@ export class DataExporter {
       rowCount++;
     }
 
-    writeStream.on("finish", () => {
-      console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
+    console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
+    return new Promise((resolve, reject) => {
+      writeStream.on("finish", resolve);
+      writeStream.on("error", reject);
+      writeStream.end();
     });
-
-    writeStream.end();
   }
 }
