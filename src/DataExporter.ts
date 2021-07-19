@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { DbResult, Id64Array, Logger, LogLevel } from "@bentley/bentleyjs-core";
 import { BackendRequestContext, ECSqlStatement, IModelDb } from "@bentley/imodeljs-backend";
-import { MassPropertiesOperation, MassPropertiesRequestProps, MassPropertiesResponseProps } from "@bentley/imodeljs-common";
+import { MassPropertiesOperation, MassPropertiesRequestProps } from "@bentley/imodeljs-common";
 import * as path from "path";
 import * as fs from "fs";
 
