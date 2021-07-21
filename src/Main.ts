@@ -39,6 +39,7 @@ async function signIn(): Promise<AccessToken> {
 
 export async function main(process: NodeJS.Process): Promise<void> {
   try {
+    BriefcaseManager.initialize("/Users/colinkerr/number4/");
     await IModelHost.startup();
 
     const accessToken: AccessToken = await signIn();
@@ -89,7 +90,7 @@ export async function main(process: NodeJS.Process): Promise<void> {
     for (const querykey of Object.keys(userdata.queries)) {
       const aQuery = userdata.queries[querykey];
       const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
-      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options);
+      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options, userdata.geometryCalculationSkipList);
     }
 
     iModelDb.close();
