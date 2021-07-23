@@ -104,10 +104,10 @@ export class DataExporter {
       if (count > 0 && count % 1000 === 0) {
         console.log(`Calculated ${count} of ${ids.length} mass properties`);
       }
-      if (geometryCalculationSkipList.includes(id)) {
-        console.log(`Skipping element with id ${id}`);
-        continue;
-      }
+      // if (geometryCalculationSkipList.includes(id)) {
+      //   console.log(`Skipping element with id ${id}`);
+      //   continue;
+      // }
       // Uncomment to print out id of element.  If calculating mass props is crashing the last id printed is the id causing the crash, add it to the list and restart the process.
       // console.log(`Calculating geometry for Element ${id}`);
       ++count;
@@ -116,15 +116,19 @@ export class DataExporter {
       if (volume !== 0) {
         result.volume += volume;
         result.volumeCount += 1;
-        continue;
+        // console.log("volume");
       }
-      requestProps.operation = MassPropertiesOperation.AccumulateAreas;
-      const areaProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
-      const area = areaProps.area ?? 0;
-      if (area !== 0) {
-        result.area += area;
-        result.areaCount += 1;
-        continue;
+      if (geometryCalculationSkipList.includes(id)) {
+        console.log(`Skipping area for element with id ${id}`);
+      } else {
+        requestProps.operation = MassPropertiesOperation.AccumulateAreas;
+        const areaProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+        const area = areaProps.area ?? 0;
+        if (area !== 0) {
+          result.area += area;
+          result.areaCount += 1;
+          // console.log("area");
+        }
       }
       requestProps.operation = MassPropertiesOperation.AccumulateLengths;
       const lengthProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
@@ -132,6 +136,7 @@ export class DataExporter {
       if (length !== 0) {
         result.length += length;
         result.lengthCount += 1;
+        // console.log("length");
       }
     }
     return result;
