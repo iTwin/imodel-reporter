@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { DbResult, Id64Array, Logger, LogLevel } from "@bentley/bentleyjs-core";
 import { BackendRequestContext, ECSqlStatement, IModelDb } from "@bentley/imodeljs-backend";
-import { MassPropertiesOperation, MassPropertiesRequestProps, MassPropertiesResponseProps } from "@bentley/imodeljs-common";
+import { MassPropertiesOperation, MassPropertiesRequestProps } from "@bentley/imodeljs-common";
 import * as path from "path";
 import * as fs from "fs";
 
@@ -14,12 +14,24 @@ export interface Options {
   calculateMassProperties: boolean;
   idColumn: number;
   idColumnIsJsonArray: boolean;
+  dropIdColumnFromResult: boolean;
+}
+
+interface MassProps {
+  totalCount: number;
+  volume: number;
+  volumeCount: number;
+  area: number;
+  areaCount: number;
+  length: number;
+  lengthCount: number;
 }
 
 const defaultOptions: Options = {
   calculateMassProperties: false,
   idColumn: 0,
   idColumnIsJsonArray: false,
+  dropIdColumnFromResult: false,
 };
 
 export class DataExporter {
@@ -53,11 +65,14 @@ export class DataExporter {
     }
   }
 
-  private rowToString(statement: ECSqlStatement): string {
+  private rowToString(statement: ECSqlStatement, columnToSkip: number): string {
     const valuesRow: string[] = [];
     const replacer = (_key: string, value: any) => (value === null) ? undefined : value;
 
     for (let i = 0; i < statement.getColumnCount(); i++) {
+      if (i === columnToSkip) {
+        continue;
+      }
       const value = statement.getValue(i).value;
       valuesRow.push(JSON.stringify(value, replacer));
     }
@@ -66,8 +81,11 @@ export class DataExporter {
     return outRow;
   }
 
-  private makeHeader(header: string[], statement: ECSqlStatement): string {
+  private makeHeader(header: string[], statement: ECSqlStatement, columnToSkip?: number): string {
     for (let i = 0; i < statement.getColumnCount(); i++) {
+      if (i === columnToSkip) {
+        continue;
+      }
       header.push(statement.getValue(i).columnInfo.getAccessString());
     }
 
@@ -75,19 +93,41 @@ export class DataExporter {
     return outHeader;
   }
 
-  private async calculateVolume(ids: Id64Array): Promise<MassPropertiesResponseProps> {
-    const requestProps: MassPropertiesRequestProps = {
-      operation: MassPropertiesOperation.AccumulateVolumes,
-      candidates: ids,
-    };
+  private async calculateMassProps(ids: Id64Array): Promise<MassProps> {
+    const result: MassProps = { totalCount: ids.length, volume: 0, volumeCount: 0, area: 0, areaCount: 0, length: 0, lengthCount: 0 };
 
     const requestContext = new BackendRequestContext();
-    const result = await this._iModelDb.getMassProperties(requestContext, requestProps);
-
-    // Trying to calculate volume on 2d geometry returns volume as undefined
-    result.volume = result.volume || 0;
-    // Trying to calculate perimeter on 3d geometry returns perimeter as undefined
-    result.perimeter = result.perimeter || 0;
+    let count = 0;
+    for (const id of ids) {
+      const requestProps: MassPropertiesRequestProps = {
+        operation: MassPropertiesOperation.AccumulateVolumes,
+        candidates: [id],
+      };
+      if (count > 0 && count % 1000 === 0) {
+        console.log(`Calculated ${count} mass properties: \n${JSON.stringify(result)}`);
+      }
+      ++count;
+      const volumeProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+      const volume = volumeProps.volume ?? 0;
+      if (volume !== 0) {
+        result.volume += volume;
+        result.volumeCount += 1;
+      }
+      requestProps.operation = MassPropertiesOperation.AccumulateAreas;
+      const areaProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+      const area = areaProps.area ?? 0;
+      if (area !== 0) {
+        result.area += area;
+        result.areaCount += 1;
+      }
+      requestProps.operation = MassPropertiesOperation.AccumulateLengths;
+      const lengthProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+      const length = lengthProps.length ?? 0;
+      if (length !== 0) {
+        result.length += length;
+        result.lengthCount += 1;
+      }
+    }
 
     return result;
   }
@@ -111,27 +151,29 @@ export class DataExporter {
     let ids: Id64Array = [];
 
     if (writeHeaders) {
-      const header: string[] = (options.calculateMassProperties) ? ["volume", "area"] : [];
-      const outHeader = this.makeHeader(header, statement);
+      const header: string[] = (options.calculateMassProperties) ? ["total_count", "volume", "volume_count", "area", "area_count", "length", "length_count"] : [];
+      const outHeader = this.makeHeader(header, statement, options.dropIdColumnFromResult ? options.idColumn : -1);
       writeStream.write(`${outHeader}\n`);
     }
 
     let rowCount = 0;
     while (DbResult.BE_SQLITE_ROW === statement.step()) {
-      const stringifiedRow = this.rowToString(statement);
+      const stringifiedRow = this.rowToString(statement, options.dropIdColumnFromResult ? options.idColumn : -1);
       if (options.calculateMassProperties === true) {
         if (options.idColumnIsJsonArray === true) {
           ids = JSON.parse(statement.getValue(options.idColumn).getString()) as Id64Array;
         } else {
           ids = [statement.getValue(options.idColumn).getId()];
         }
-
-        const result = await this.calculateVolume(ids);
-        writeStream.write(`${result.volume};${result.area};${stringifiedRow}\n`);
+        const result = await this.calculateMassProps(ids);
+        writeStream.write(`${result.totalCount};${result.volume};${result.volumeCount};${result.area};${result.areaCount};${result.length};${result.lengthCount};${stringifiedRow}\n`);
       } else {
         writeStream.write(`${stringifiedRow}\n`);
       }
       rowCount++;
+      if (rowCount % 1000 === 0) {
+        console.log(`${rowCount} rows processed so far`);
+      }
     }
 
     console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
