@@ -6,9 +6,9 @@
 import { BentleyError } from "@bentley/bentleyjs-core";
 import { ElectronAuthorizationBackend } from "@bentley/electron-manager/lib/ElectronBackend";
 import {
-  BriefcaseDb, BriefcaseManager, IModelHost, NativeHost, ProgressFunction, RequestNewBriefcaseArg,
+  BriefcaseDb, BriefcaseManager, CheckpointManager, IModelHost, IModelJsFs, NativeHost, ProgressFunction, RequestNewBriefcaseArg,
 } from "@bentley/imodeljs-backend";
-import { IModelVersion, NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
+import { IModelVersion, LocalBriefcaseProps, NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
 import { AccessToken, AuthorizedClientRequestContext } from "@bentley/itwin-client";
 
 import { DataExporter } from "./DataExporter";
@@ -35,6 +35,40 @@ async function signIn(): Promise<AccessToken> {
     });
     client.signIn().catch((err) => reject(err));
   });
+}
+
+async function getBriefcase(requestContext: AuthorizedClientRequestContext, request: RequestNewBriefcaseArg): Promise<LocalBriefcaseProps> {
+  const briefcaseId = 0;
+  const fileName = request.fileName ?? BriefcaseManager.getFileName({ briefcaseId, iModelId: request.iModelId });
+
+  const asOf = request.asOf ?? IModelVersion.latest().toJSON();
+  const changeset = await BriefcaseManager.changesetFromVersion(requestContext, IModelVersion.fromJSON(asOf), request.iModelId);
+
+  const args = {
+    localFile: fileName,
+    checkpoint: {
+      requestContext,
+      contextId: request.contextId,
+      iModelId: request.iModelId,
+      changeSetId: changeset.id,
+      changesetIndex: changeset.index,
+    },
+    onProgress: request.onProgress,
+  };
+
+  await CheckpointManager.downloadCheckpoint(args);
+  const fileSize = IModelJsFs.lstatSync(fileName)?.size ?? 0;
+  const response: LocalBriefcaseProps = {
+    fileName,
+    briefcaseId,
+    iModelId: request.iModelId,
+    contextId: request.contextId,
+    changeSetId: args.checkpoint.changeSetId,
+    changesetIndex: args.checkpoint.changesetIndex,
+    fileSize,
+  };
+
+  return response;
 }
 
 export async function main(process: NodeJS.Process): Promise<void> {
@@ -76,7 +110,7 @@ export async function main(process: NodeJS.Process): Promise<void> {
     console.log(`Started opening iModel (projectId=${projectId}, iModelId=${iModelId}, changeSetId=${changeSetId})`);
     const requestContext: AuthorizedClientRequestContext = new AuthorizedClientRequestContext(accessToken);
     const requestNewBriefcaseArg: RequestNewBriefcaseArg = { contextId: projectId, iModelId, asOf: version.toJSON(), briefcaseId: 0, onProgress: progressTracking };
-    const briefcaseProps = await BriefcaseManager.downloadBriefcase(requestContext, requestNewBriefcaseArg);
+    const briefcaseProps = await getBriefcase(requestContext, requestNewBriefcaseArg);
     requestContext.enter();
 
     const iModelDb = await BriefcaseDb.open(requestContext, briefcaseProps);
@@ -87,9 +121,10 @@ export async function main(process: NodeJS.Process): Promise<void> {
     exporter.setFolder(userdata.folder);
 
     for (const querykey of Object.keys(userdata.queries)) {
+      console.log(`Executing query for ${querykey}`);
       const aQuery = userdata.queries[querykey];
       const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
-      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options);
+      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options, userdata.geometryCalculationSkipList);
     }
 
     iModelDb.close();
