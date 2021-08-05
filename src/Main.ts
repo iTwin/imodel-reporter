@@ -124,7 +124,7 @@ export async function main(process: NodeJS.Process): Promise<void> {
       console.log(`Executing query for ${querykey}`);
       const aQuery = userdata.queries[querykey];
       const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
-      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options, userdata.geometryCalculationSkipList);
+      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options);
     }
 
     iModelDb.close();
