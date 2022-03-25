@@ -28,7 +28,7 @@
     "@bentley/itwin-client": "^2.19.2",
     "@bentley/rbac-client": "^2.19.2",
     "@bentley/telemetry-client": "^2.19.2",
-    "electron": "^11.1.0"
+    "electron": "^13.6.6"
   },
   "devDependencies": {
     "@bentley/build-tools": "^2.19.2",
