@@ -1,15 +1,16 @@
+import * as fs from "fs";
 /*---------------------------------------------------------------------------------------------
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import * as path from "path";
-import * as fs from "fs";
+
 import { ECSqlStatement } from "@itwin/core-backend/lib/cjs/ECSqlStatement";
 import { IModelDb } from "@itwin/core-backend/lib/cjs/IModelDb";
 import { DbResult } from "@itwin/core-bentley/lib/cjs/BeSQLite";
 import { Id64Array } from "@itwin/core-bentley/lib/cjs/Id";
 import { Logger, LogLevel } from "@itwin/core-bentley/lib/cjs/Logger";
-import { MassPropertiesRequestProps, MassPropertiesOperation } from "@itwin/core-common/lib/cjs/MassProperties";
+import { MassPropertiesOperation, MassPropertiesRequestProps } from "@itwin/core-common/lib/cjs/MassProperties";
 
 const APP_LOGGER_CATEGORY = "imodel-report-main";
 
@@ -98,7 +99,7 @@ export class DataExporter {
     return outHeader;
   }
 
-  private async calculateMassProps(ids: Id64Array, geometryCalculationSkipList: string[] = []): Promise<MassProps> {
+  public async calculateMassProps(ids: Id64Array): Promise<MassProps> {
     const result: MassProps = { totalCount: ids.length, volume: 0, volumeCount: 0, area: 0, areaCount: 0, length: 0, lengthCount: 0 };
 
     let count = 0;
@@ -108,12 +109,8 @@ export class DataExporter {
         candidates: [id],
       };
       if (count > 0 && count % 1000 === 0) {
-        Logger.logInfo(APP_LOGGER_CATEGORY,`Calculated ${count} of ${ids.length} mass properties`);
+        Logger.logInfo(APP_LOGGER_CATEGORY, `Calculated ${count} of ${ids.length} mass properties`);
       }
-      // if (geometryCalculationSkipList.includes(id)) {
-      //   console.log(`Skipping element with id ${id}`);
-      //   continue;
-      // }
       // Uncomment to print out id of element.  If calculating mass props is crashing the last id printed is the id causing the crash, add it to the list and restart the process.
       // console.log(`Calculating geometry for Element ${id}`);
       ++count;
@@ -122,19 +119,13 @@ export class DataExporter {
       if (volume !== 0) {
         result.volume += volume;
         result.volumeCount += 1;
-        // console.log("volume");
       }
-      if (geometryCalculationSkipList.includes(id)) {
-        Logger.logInfo(APP_LOGGER_CATEGORY,`Skipping area for element with id ${id}`);
-      } else {
-        requestProps.operation = MassPropertiesOperation.AccumulateAreas;
-        const areaProps = await this._iModelDb.getMassProperties(requestProps);
-        const area = areaProps.area ?? 0;
-        if (area !== 0) {
-          result.area += area;
-          result.areaCount += 1;
-          // console.log("area");
-        }
+      requestProps.operation = MassPropertiesOperation.AccumulateAreas;
+      const areaProps = await this._iModelDb.getMassProperties(requestProps);
+      const area = areaProps.area ?? 0;
+      if (area !== 0) {
+        result.area += area;
+        result.areaCount += 1;
       }
       requestProps.operation = MassPropertiesOperation.AccumulateLengths;
       const lengthProps = await this._iModelDb.getMassProperties(requestProps);
@@ -142,26 +133,25 @@ export class DataExporter {
       if (length !== 0) {
         result.length += length;
         result.lengthCount += 1;
-        // console.log("length");
       }
     }
     return result;
   }
 
-  private assignDefaultOptions(options: Partial<Options> = {}): Options {
+  public assignDefaultOptions(options: Partial<Options> = {}): Options {
     return { ...defaultOptions, ...options };
   }
 
-  public async writeQueryResultsToCsv(ecSql: string, fileName: string, options: Partial<Options> = {}, geometryCalculationSkipList: string[] = []): Promise<void> {
+  public async writeQueryResultsToCsv(ecSql: string, fileName: string, options: Partial<Options> = {}): Promise<void> {
     const outputFileName: string = path.join(this._outputDir, fileName);
     const opts = this.assignDefaultOptions(options);
 
     await this._iModelDb.withPreparedStatement(ecSql, async (statement: ECSqlStatement): Promise<void> => {
-      await this.writeQueries(statement, outputFileName, opts, geometryCalculationSkipList);
+      await this.writeQueries(statement, outputFileName, opts);
     });
   }
 
-  private async writeQueries(statement: ECSqlStatement, outputFileName: string, options: Options, geometryCalculationSkipList: string[] = []): Promise<void> {
+  private async writeQueries(statement: ECSqlStatement, outputFileName: string, options: Options): Promise<void> {
     const writeHeaders = !fs.existsSync(outputFileName);
     const writeStream = fs.createWriteStream(outputFileName, { flags: "a" });
     let ids: Id64Array = [];
@@ -183,18 +173,18 @@ export class DataExporter {
         }
         // Uncomment to find the row in the query results.  Helpful if you have a crash and want to restart the calculations part way through a query.
         // console.log(`Calculating mass properties for row ${rowCount} for ${ids.length} elements.`);
-        const result = await this.calculateMassProps(ids, geometryCalculationSkipList);
+        const result = await this.calculateMassProps(ids);
         writeStream.write(`${result.volume};${result.volumeCount / result.totalCount};${result.area};${result.areaCount / result.totalCount};${result.length};${result.lengthCount / result.totalCount};${stringifiedRow}\n`);
       } else {
         writeStream.write(`${stringifiedRow}\n`);
       }
       rowCount++;
       if (rowCount % 1000 === 0) {
-        Logger.logInfo(APP_LOGGER_CATEGORY,`${rowCount} rows processed so far`);
+        Logger.logInfo(APP_LOGGER_CATEGORY, `${rowCount} rows processed so far`);
       }
     }
 
-    Logger.logInfo(APP_LOGGER_CATEGORY,`Written ${rowCount} rows to file: ${outputFileName}`);
+    Logger.logInfo(APP_LOGGER_CATEGORY, `Written ${rowCount} rows to file: ${outputFileName}`);
     return new Promise((resolve, reject) => {
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);

@@ -3,18 +3,20 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { SpatialCategory, SubCategory, DrawingCategory, Subject, Drawing, DefinitionModel, InformationRecordModel, PhysicalModel, SpatialLocationModel, DocumentListModel, FunctionalSchema, GroupModel, IModelDb, Platform, ModelSelector, CategorySelector, AuxCoordSystem2d, ElementOwnsUniqueAspect, ElementOwnsMultiAspects} from "@itwin/core-backend";
-import { Id64String, Id64 } from "@itwin/core-bentley/lib/cjs/Id";
-import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@itwin/core-common/lib/cjs/core-common";
-import { Range3d } from "@itwin/core-geometry/lib/cjs/core-geometry";
 import { assert } from "chai";
 import * as path from "path";
+
+import { AuxCoordSystem2d, CategorySelector, DefinitionModel, DocumentListModel, Drawing, DrawingCategory, ElementOwnsMultiAspects, ElementOwnsUniqueAspect, FunctionalSchema, GroupModel, IModelDb, InformationRecordModel, ModelSelector, PhysicalModel, Platform, SpatialCategory, SpatialLocationModel, SubCategory, Subject } from "@itwin/core-backend";
+import { Id64, Id64String } from "@itwin/core-bentley/lib/cjs/Id";
+import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@itwin/core-common/lib/cjs/core-common";
+import { Range3d } from "@itwin/core-geometry/lib/cjs/core-geometry";
 
 export async function prepareSourceDb(sourceDb: IModelDb): Promise<void> {
   const sourceSchemaFileName: string = path.join(__dirname, "assets", "TestPropsSchema-33.01.00.00.ecschema.xml");
   try {
-    await sourceDb.importSchemas([FunctionalSchema.schemaFilePath, sourceSchemaFileName]);
+    await sourceDb.importSchemas([FunctionalSchema.schemaFilePath, sourceSchemaFileName],);
   } catch (e) {
+    /* eslint-disable no-console */
     console.log(e);
   }
   FunctionalSchema.registerSchema();
@@ -123,12 +125,12 @@ export function populateSourceDb(sourceDb: IModelDb): void {
     model: physicalModelId,
     code: Code.createEmpty(),
     category: spatialCategoryId,
-    PersonA: {
-      Age: 52,
-      Name: "John",
-      PersonIQ: {
-        Memory: 6,
-        Perception: 8,
+    personA: {
+      age: 52,
+      name: "John",
+      personIQ: {
+        memory: 6,
+        perception: 8,
       },
     },
   };
@@ -140,7 +142,7 @@ export function populateSourceDb(sourceDb: IModelDb): void {
     model: physicalModelId,
     code: Code.createEmpty(),
     category: spatialCategoryId,
-    Type: "AspectOwningElement",
+    type: "AspectOwningElement",
   };
   const aspectElementId = sourceDb.elements.insertElement(aspectElement);
   assert.isTrue(Id64.isValidId64(aspectElementId));
@@ -151,7 +153,7 @@ export function populateSourceDb(sourceDb: IModelDb): void {
     code: Code.createEmpty(),
     element: new ElementOwnsUniqueAspect(aspectElementId),
     category: spatialCategoryId,
-    Diameter: 12,
+    diameter: 12,
   };
   sourceDb.elements.insertAspect(uniqueAspect);
 
@@ -161,9 +163,9 @@ export function populateSourceDb(sourceDb: IModelDb): void {
     code: Code.createEmpty(),
     element: new ElementOwnsMultiAspects(aspectElementId),
     category: spatialCategoryId,
-    TextSize: 5.5,
-    TextFont: "Italics",
-    Color: 2,
+    textSize: 5.5,
+    textFont: "Italics",
+    color: 2,
   };
   sourceDb.elements.insertAspect(multiAspect);
 
@@ -172,10 +174,10 @@ export function populateSourceDb(sourceDb: IModelDb): void {
     model: physicalModelId,
     code: Code.createEmpty(),
     category: spatialCategoryId,
-    Offset: "FooBar",
-    Count: 12,
-    Limit: 10,
-    Select: 10,
+    offset: "FooBar",
+    count: 12,
+    limit: 10,
+    select: 10,
   };
   const keywordsElementId = sourceDb.elements.insertElement(keywordsElement);
   assert.isTrue(Id64.isValidId64(keywordsElementId));
@@ -214,8 +216,8 @@ export function populateSourceDb(sourceDb: IModelDb): void {
     model: physicalModelId,
     code: Code.createEmpty(),
     category: spatialCategoryId,
-    Length: 20,
-    Width: 10,
+    length: 20,
+    width: 10,
   };
   const derivedConcreteElementId = sourceDb.elements.insertElement(derivedConcreteElement);
   assert.isTrue(Id64.isValidId64(derivedConcreteElementId));
