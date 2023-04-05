@@ -2,22 +2,21 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { Id64, Id64String } from "@bentley/bentleyjs-core";
-import { Range3d } from "@bentley/geometry-core";
-import { AuxCoordSystem2d, BackendRequestContext, CategorySelector, DefinitionModel, DocumentListModel, Drawing, DrawingCategory, ElementOwnsMultiAspects, ElementOwnsUniqueAspect, FunctionalSchema, GroupModel, IModelDb, InformationRecordModel, ModelSelector, PhysicalModel, Platform, SpatialCategory, SpatialLocationModel, SubCategory, Subject } from "@bentley/imodeljs-backend";
-import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@bentley/imodeljs-common";
+
+import { SpatialCategory, SubCategory, DrawingCategory, Subject, Drawing, DefinitionModel, InformationRecordModel, PhysicalModel, SpatialLocationModel, DocumentListModel, FunctionalSchema, GroupModel, IModelDb, Platform, ModelSelector, CategorySelector, AuxCoordSystem2d, ElementOwnsUniqueAspect, ElementOwnsMultiAspects} from "@itwin/core-backend";
+import { Id64String, Id64 } from "@itwin/core-bentley/lib/cjs/Id";
+import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@itwin/core-common/lib/cjs/core-common";
+import { Range3d } from "@itwin/core-geometry/lib/cjs/core-geometry";
 import { assert } from "chai";
 import * as path from "path";
 
 export async function prepareSourceDb(sourceDb: IModelDb): Promise<void> {
-  const requestContext = new BackendRequestContext();
   const sourceSchemaFileName: string = path.join(__dirname, "assets", "TestPropsSchema-33.01.00.00.ecschema.xml");
   try {
-    await sourceDb.importSchemas(requestContext, [sourceSchemaFileName]);
+    await sourceDb.importSchemas([FunctionalSchema.schemaFilePath, sourceSchemaFileName]);
   } catch (e) {
     console.log(e);
   }
-
   FunctionalSchema.registerSchema();
 }
 
@@ -32,7 +31,7 @@ function insertSpatialCategory(iModelDb: IModelDb, modelId: Id64String, category
 
 export function populateSourceDb(sourceDb: IModelDb): void {
   if (Platform.platformName.startsWith("win")) {
-    sourceDb.embedFont({ id: 1, type: FontType.TrueType, name: "Arial" });
+    sourceDb.addNewFont("Arial", FontType.TrueType);
     assert.exists(sourceDb.fontMap.getFont("Arial"));
     assert.exists(sourceDb.fontMap.getFont(1));
   }

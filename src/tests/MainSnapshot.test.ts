@@ -6,11 +6,12 @@ import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 
-import { Id64Array } from "@bentley/bentleyjs-core";
-import { IModelHost, IModelJsFs, SnapshotDb } from "@bentley/imodeljs-backend";
-
 import { DataExporter, Options } from "../DataExporter";
 import { populateSourceDb, prepareSourceDb } from "./iModelUtils";
+import { SnapshotDb } from "@itwin/core-backend/lib/cjs/IModelDb";
+import { IModelHost } from "@itwin/core-backend/lib/cjs/IModelHost";
+import { IModelJsFs } from "@itwin/core-backend/lib/cjs/IModelJsFs";
+import { Id64Array } from "@itwin/core-bentley/lib/cjs/Id";
 
 describe("DataExporter.test.ts", () => {
   let sourceDbFile = "";

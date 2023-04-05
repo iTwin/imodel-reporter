@@ -1,0 +1,35 @@
+{    
+  "user": "1CP02",
+  "url": "https://connect-imodelweb.bentley.com/imodeljs/?projectId=7e55683b-fef2-4d5c-8805-e5354310e316&iModelId=d1603577-0c55-4137-941f-6e839a0b64cf",
+  "folder": "./1CP02",
+  "geometryCalculationSkipList": [
+    "0x3000001b9f7","0x3000019db0b","0x3000019ddee","0x3000019e0d7","0x3000019e6bd","0x3000019f2ad",
+    "0x30000276d87", "0x30000276dd5", "0x300002910c3", "0x300002910c7","0x300002910cc",
+    "0x3000013097f", "0x30000130e10","0x30000131064", "0x300001312dd", "0x3000027de65", "0x3000027e024", "0x300002ca62b", "0x300002ca7ec", "0x3000028eddd", "0x3000028ef9d",
+    "0x300001d879e", "0x300001d895b", "0x300001d97fc", "0x300001d99b9", "0x300001da0e1", "0x300001da29e", "0x300001da9c2", "0x300001dab7f", "0x300001dad64", "0x300001daf21", "0x300001db972", "0x300001dbb32",
+    "0x300001dc16f", "0x300001dc32c", "0x30000258c50", "0x30000258e0d", "0x30000259a81", "0x30000259c3e", "0x3000025a360", "0x3000025a51d", "0x3000025aada", "0x3000025ac97", "0x3000025b3be", "0x3000025b57b",
+    "0x3000025bca3", "0x3000025be60", "0x3000025c584", "0x3000025c741", "0x3000025c926", "0x3000025c926", "0x3000025cae3",
+    "0x30000298ed9", "0x30000298edb", "0x30000298edd", "0x30000298edf", "0x30000298f16", "0x30000298f19", "0x30000298f1b", "0x30000298f1b", "0x30000298f1d", "0x30000298f25", "0x300002990d6", "0x300002990d7"
+    , "0x300002990da", "0x30000299100", "0x30000299102", "0x30000299104", "0x30000299106", "0x300002991d8", "0x300002991da", "0x300002991dc", "0x300002991de", "0x30000299215", "0x30000299218", "0x3000029921a"
+    , "0x3000029921c", "0x30000299224", "0x300002993d5", "0x300002993d6", "0x300002993d9", "0x300002993e0", "0x300002993ff", "0x30000299401", "0x30000299403", "0x30000299405"
+    ,"0x3000027f0b8", "0x3000027f0c6", "0x3000027f0c8", "0x3000027f0ca", "0x3000027f0d1", "0x3000027f0d4", "0x3000027f0d5", "0x3000027f12b", "0x3000027f130", "0x3000027f132", "0x3000027f134", "0x3000027f13b"
+    , "0x3000027f13d", "0x3000027f13f", "0x3000027f141", "0x3000027f149", "0x30000355e75", "0x30000355e83", "0x30000355e85", "0x30000355e87", "0x30000355e89", "0x30000355e8e","0x30000355e91"
+    , "0x30000355ee8", "0x30000355eed", "0x30000355eef", "0x30000355ef1", "0x30000355ef8", "0x30000355efa", "0x30000355efc", "0x30000355efe", "0x30000355f06"
+    , "0x3000028e77e", "0x3000028e78c", "0x3000028e790", "0x3000028e792", "0x3000028e796", "0x3000028e797", "0x3000028e79a", "0x3000028e7a4", "0x3000028e7f1", "0x3000028e7f6", "0x3000028e7f8", "0x3000028e7fa"
+    , "0x3000028e801", "0x3000028e803", "0x3000028e805", "0x3000028e807", "0x3000028e80f", "0x3000028ea79", "0x3000028ea87", "0x3000028ea89", "0x3000028ea8b", "0x3000028ea92","0x3000028ea95","0x3000028ea9f"
+    , "0x3000028eaec", "0x3000028eaf1", "0x3000028eaf3", "0x3000028eaf5", "0x3000028eafc", "0x3000028eafe", "0x3000028eb00", "0x3000028eb02", "0x3000028eb0a"
+    , "0x3000025f0ae", "0x3000025f0bc", "0x3000025f0be", "0x3000025f0c0", "0x3000025f0c0", "0x3000025f0c6", "0x3000025f0c7", "0x3000025f0ca", "0x3000025f0cb", "0x3000025f121", "0x3000025f126", "0x3000025f128"
+    , "0x3000025f12a", "0x3000025f131", "0x3000025f133", "0x3000025f135", "0x3000025f137"
+  ],
+  "queries" : {
+    "carbon" : {
+      "store" : "carbon",
+      "query" : "select ge.ecclassid, max(ge.userlabel), ca.codevalue as Category, rl.codevalue as Model, qm.material, sum(ifnull(qd.length, ifnull(qd.height,0))) as Length, 'm' as LengthUnit,  sum(ifnull(qv.grossvolume,0)) as Volume, 'm3' as VolumeUnit, sum(ifnull(qa.grosssurfacearea,0)) as Area, 'm2' as AreaUnit, count(ge.ecinstanceid) as QTY, json_group_array(IdToHex(ge.ECinstanceid)) as id_list from bis.geometricelement3d ge join bis.category ca on ca.ecinstanceid = ge.category.id join bis.externalsourceaspect ea on ge.ecinstanceid = ea.element.id left join qto.materialaspect qm on ge.ecinstanceid = qm.element.id left join qto.volumeaspect qv on ge.ecinstanceid = qv.element.id left join qto.dimensionsaspect qd on ge.ecinstanceid = qd.element.id left join qto.surfaceareaaspect qa on ge.ecinstanceid = qa.element.id join bis.externalsource rl on rl.ecinstanceid = ea.source.id where ca.codevalue not in ('OST_Levels', 'OST_Rooms') group by ge.ecclassid, ca.codevalue, rl.codevalue, qm.material", 
+        "options": {
+          "calculateMassProperties": true,
+          "idColumn": 12,
+          "idColumnIsJsonArray": true
+      }
+    }
+  } 
+}
