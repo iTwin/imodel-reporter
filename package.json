@@ -1,5 +1,4 @@
 {
-  "name": "simple-itwinjs-cli-app",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -35,7 +34,7 @@
     "@types/mocha": "^10.0.1",
     "@types/node": "18.15.11",
     "chai": "^4.3.7",
-    "eslint": "8.37.0",
+    "eslint": "7.30.0",
     "rimraf": "4.4.1",
     "typescript": "~4.4.0"
   },

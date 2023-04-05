@@ -2,7 +2,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { BackendIModelsAccess } from "@itwin/imodels-access-backend";
+import { BackendIModelsAccess } from "@itwin/imodels-access-backend/lib/BackendIModelsAccess";
 import { NodeCliAuthorizationClient } from "@itwin/node-cli-authorization";
 import { DataExporter } from "./DataExporter";
 import { BriefcaseManager, RequestNewBriefcaseArg } from "@itwin/core-backend/lib/cjs/BriefcaseManager";
