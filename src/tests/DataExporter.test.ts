@@ -6,9 +6,7 @@ import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 
-import { SnapshotDb } from "@itwin/core-backend/lib/cjs/IModelDb";
-import { IModelHost } from "@itwin/core-backend/lib/cjs/IModelHost";
-import { IModelJsFs } from "@itwin/core-backend/lib/cjs/IModelJsFs";
+import { IModelHost, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { Id64Array } from "@itwin/core-bentley/lib/cjs/Id";
 
 import { DataExporter, Options } from "../DataExporter";

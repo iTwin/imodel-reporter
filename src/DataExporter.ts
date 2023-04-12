@@ -1,16 +1,12 @@
-import * as fs from "fs";
 /*---------------------------------------------------------------------------------------------
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 import * as path from "path";
-
-import { ECSqlStatement } from "@itwin/core-backend/lib/cjs/ECSqlStatement";
-import { IModelDb } from "@itwin/core-backend/lib/cjs/IModelDb";
-import { DbResult } from "@itwin/core-bentley/lib/cjs/BeSQLite";
-import { Id64Array } from "@itwin/core-bentley/lib/cjs/Id";
-import { Logger, LogLevel } from "@itwin/core-bentley/lib/cjs/Logger";
-import { MassPropertiesOperation, MassPropertiesRequestProps } from "@itwin/core-common/lib/cjs/MassProperties";
+import * as fs from "fs";
+import { ECSqlStatement, IModelDb } from "@itwin/core-backend";
+import { DbResult, Id64Array, Logger, LogLevel } from "@itwin/core-bentley";
+import { MassPropertiesOperation, MassPropertiesRequestProps } from "@itwin/core-common";
 
 const APP_LOGGER_CATEGORY = "imodel-report-main";
 
@@ -111,8 +107,6 @@ export class DataExporter {
       if (count > 0 && count % 1000 === 0) {
         Logger.logInfo(APP_LOGGER_CATEGORY, `Calculated ${count} of ${ids.length} mass properties`);
       }
-      // Uncomment to print out id of element.  If calculating mass props is crashing the last id printed is the id causing the crash, add it to the list and restart the process.
-      // console.log(`Calculating geometry for Element ${id}`);
       ++count;
       const volumeProps = await this._iModelDb.getMassProperties(requestProps);
       const volume = volumeProps.volume ?? 0;
@@ -171,8 +165,6 @@ export class DataExporter {
         } else {
           ids = [statement.getValue(options.idColumn).getId()];
         }
-        // Uncomment to find the row in the query results.  Helpful if you have a crash and want to restart the calculations part way through a query.
-        // console.log(`Calculating mass properties for row ${rowCount} for ${ids.length} elements.`);
         const result = await this.calculateMassProps(ids);
         writeStream.write(`${result.volume};${result.volumeCount / result.totalCount};${result.area};${result.areaCount / result.totalCount};${result.length};${result.lengthCount / result.totalCount};${stringifiedRow}\n`);
       } else {

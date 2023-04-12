@@ -2,12 +2,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { BriefcaseManager } from "@itwin/core-backend/lib/cjs/BriefcaseManager";
-import { BriefcaseDb, IModelDb } from "@itwin/core-backend/lib/cjs/IModelDb";
-import { IModelHost, IModelHostConfiguration } from "@itwin/core-backend/lib/cjs/IModelHost";
-import { Logger, LogLevel } from "@itwin/core-bentley/lib/cjs/Logger";
-import { BriefcaseIdValue, LocalBriefcaseProps } from "@itwin/core-common/lib/cjs/BriefcaseTypes";
-import { BackendIModelsAccess } from "@itwin/imodels-access-backend/lib/BackendIModelsAccess";
+import { BriefcaseDb, BriefcaseManager, IModelDb, IModelHost, IModelHostConfiguration } from "@itwin/core-backend";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { BriefcaseIdValue, LocalBriefcaseProps } from "@itwin/core-common";
+import { BackendIModelsAccess } from "@itwin/imodels-access-backend";
 import { NodeCliAuthorizationClient } from "@itwin/node-cli-authorization";
 
 import { DataExporter } from "./DataExporter";

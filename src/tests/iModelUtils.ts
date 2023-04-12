@@ -7,9 +7,9 @@ import { assert } from "chai";
 import * as path from "path";
 
 import { AuxCoordSystem2d, CategorySelector, DefinitionModel, DocumentListModel, Drawing, DrawingCategory, ElementOwnsMultiAspects, ElementOwnsUniqueAspect, FunctionalSchema, GroupModel, IModelDb, InformationRecordModel, ModelSelector, PhysicalModel, Platform, SpatialCategory, SpatialLocationModel, SubCategory, Subject } from "@itwin/core-backend";
-import { Id64, Id64String } from "@itwin/core-bentley/lib/cjs/Id";
-import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@itwin/core-common/lib/cjs/core-common";
-import { Range3d } from "@itwin/core-geometry/lib/cjs/core-geometry";
+import { Id64, Id64String } from "@itwin/core-bentley";
+import { AuxCoordSystem2dProps, Code, CodeScopeSpec, ColorDef, FontType, IModel, SubCategoryAppearance } from "@itwin/core-common";
+import { Range3d } from "@itwin/core-geometry";
 
 export async function prepareSourceDb(sourceDb: IModelDb): Promise<void> {
   const sourceSchemaFileName: string = path.join(__dirname, "assets", "TestPropsSchema-33.01.00.00.ecschema.xml");

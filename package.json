@@ -9,7 +9,10 @@
     "test": "mocha ./lib/tests/*.test.js",
     "copy:test-assets": "cpx \"./src/tests/assets/**/{*,.*}\" ./lib/tests/assets"
   },
-  "repository": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/imodel-reporter"
+  },
   "dependencies": {
     "@itwin/appui-abstract": "4.0.0-dev.66",
     "@itwin/core-backend": "4.0.0-dev.66",
