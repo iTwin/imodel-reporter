@@ -151,8 +151,8 @@ export class DataExporter {
     let ids: Id64Array = [];
 
     if (writeHeaders) {
-      const header: string[] = (options.calculateMassProperties) ? ["volume", "volume_si", "area", "area_si", "length", "length_si"] : [];
-      const outHeader = this.makeHeader(header, statement, options.calculateMassProperties ? options.idColumn : -1);
+      const header: string[] = (options.calculateMassProperties) ? ["total_count", "volume", "volume_count", "area", "area_count", "length", "length_count"] : [];
+      const outHeader = this.makeHeader(header, statement, options.dropIdColumnFromResult ? options.idColumn : -1);
       writeStream.write(`${outHeader}\n`);
     }
 
@@ -166,7 +166,7 @@ export class DataExporter {
           ids = [statement.getValue(options.idColumn).getId()];
         }
         const result = await this.calculateMassProps(ids);
-        writeStream.write(`${result.volume};${result.volumeCount / result.totalCount};${result.area};${result.areaCount / result.totalCount};${result.length};${result.lengthCount / result.totalCount};${stringifiedRow}\n`);
+        writeStream.write(`${result.totalCount};${result.volume};${result.volumeCount};${result.area};${result.areaCount};${result.length};${result.lengthCount};${stringifiedRow}\n`);
       } else {
         writeStream.write(`${stringifiedRow}\n`);
       }
