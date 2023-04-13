@@ -23,7 +23,7 @@ The iModel Reporter is a simple command line app to generate csv reports from an
 To build and run this app locally you will need a few things:
 
 - Install [Git](https://git-scm.com/)
-- Install [Node.js](https://nodejs.org/en/) v12 (must be greater than 12.10.x)
+- Install [Node.js](https://nodejs.org/en/) v18 (must be at least 18.0.0)
 - Install [VS Code](https://code.visualstudio.com/)
 
 ### Creating a test iModel
