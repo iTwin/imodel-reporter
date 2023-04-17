@@ -23,7 +23,7 @@ The iModel Reporter is a simple command line app to generate csv reports from an
 To build and run this app locally you will need a few things:
 
 - Install [Git](https://git-scm.com/)
-- Install [Node.js](https://nodejs.org/en/) v12 (must be greater than 12.10.x)
+- Install [Node.js](https://nodejs.org/en/) v18 (must be at least 18.0.0)
 - Install [VS Code](https://code.visualstudio.com/)
 
 ### Creating a test iModel
@@ -52,12 +52,6 @@ If you want to create iModel in your local environment then follow  [this](https
   npm run build
   npm run start <query.json>           # Run with iModel from hub
   ```
-
-To use iModel from your local machine
-
-```sh
-npm run start:snapshot <file path> <query.json>     # Run with local iModel
-```
 
 ## Using Data Exporter
 
@@ -133,7 +127,7 @@ Example supports three types of queries: generic queries; calculating volume of 
 
 Running example queries file should create a new folder with a structure like this:
 
-```
+```fs
 /out/example
     |-->schema.csv
     |-->class.csv
@@ -150,7 +144,7 @@ The full folder structure of this app is explained below:
 > **Note!** Make sure you have already built the app using `npm run build`
 
 | Name | Description |
-| ------------------------ | ---------------------------------------------------------------------------------------------| 
+| ------------------------ | ---------------------------------------------------------------------------------------------|
 | **.vscode**              | Contains VS Code specific settings                                                           |
 | **.github**              | Contains Github related files                                                                |
 | **lib**                  | Contains the distributable (or output) from your TypeScript build. This is the code you ship |

@@ -6,8 +6,8 @@ import { expect } from "chai";
 import * as fs from "fs";
 import * as path from "path";
 
-import { Id64Array } from "@bentley/bentleyjs-core";
-import { IModelHost, IModelJsFs, SnapshotDb } from "@bentley/imodeljs-backend";
+import { IModelHost, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
+import { Id64Array } from "@itwin/core-bentley";
 
 import { DataExporter, Options } from "../DataExporter";
 import { populateSourceDb, prepareSourceDb } from "./iModelUtils";
@@ -30,7 +30,9 @@ describe("DataExporter.test.ts", () => {
     sourceDb.saveChanges();
   });
 
-  after(async () => { await IModelHost.shutdown(); });
+  after(async () => {
+    await IModelHost.shutdown();
+  });
 
   it("CSV files are correctly generated from imodel", async () => {
     const exporter = new DataExporter(sourceDb);
@@ -52,7 +54,7 @@ describe("DataExporter.test.ts", () => {
   describe("Default options for query", () => {
     it("Should assign default values to query options, if options are not provided", () => {
       const exporter = new DataExporter(sourceDb);
-      const options = exporter["assignDefaultOptions"]();
+      const options = exporter.assignDefaultOptions();
       expect(options.calculateMassProperties).is.false;
       expect(options.idColumn).is.equal(0);
       expect(options.idColumnIsJsonArray).is.false;
@@ -67,7 +69,7 @@ describe("DataExporter.test.ts", () => {
         idColumnIsJsonArray: true,
         dropIdColumnFromResult: true,
       };
-      const opts = exporter["assignDefaultOptions"](options);
+      const opts = exporter.assignDefaultOptions(options);
       expect(opts.calculateMassProperties).is.true;
       expect(opts.idColumn).to.equal(15);
       expect(opts.idColumnIsJsonArray).is.true;
@@ -79,7 +81,7 @@ describe("DataExporter.test.ts", () => {
     it("Should return zero instead of undefined if object doesn't have volume", async () => {
       const exporter = new DataExporter(sourceDb);
       const ids: Id64Array = ["0x2b"]; // Id of existing 2D Geometry element from the test iModel.
-      const results = await exporter["calculateMassProps"](ids);
+      const results = await exporter.calculateMassProps(ids);
       expect(results.volume).is.equal(0);
     });
   });

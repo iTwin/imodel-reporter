@@ -2,13 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-import { DbResult, Id64Array, Logger, LogLevel } from "@bentley/bentleyjs-core";
-import { BackendRequestContext, ECSqlStatement, IModelDb } from "@bentley/imodeljs-backend";
-import { MassPropertiesOperation, MassPropertiesRequestProps } from "@bentley/imodeljs-common";
 import * as path from "path";
 import * as fs from "fs";
+import { ECSqlStatement, IModelDb } from "@itwin/core-backend";
+import { DbResult, Id64Array, Logger, LogLevel } from "@itwin/core-bentley";
+import { MassPropertiesOperation, MassPropertiesRequestProps } from "@itwin/core-common";
 
-const loggerCategory = "DataExporter";
+const APP_LOGGER_CATEGORY = "imodel-report-main";
 
 export interface Options {
   calculateMassProperties: boolean;
@@ -45,23 +45,25 @@ export class DataExporter {
     // initialize logging
     Logger.initializeToConsole();
     Logger.setLevelDefault(LogLevel.Error);
-    Logger.setLevel(loggerCategory, LogLevel.Trace);
+    Logger.setLevel(APP_LOGGER_CATEGORY, LogLevel.Trace);
   }
 
   public setFolder(folder: string): void {
     this._outputDir = path.join(__dirname, "..", "out", folder);
     if (fs.existsSync(this._outputDir)) {
       try {
-        fs.rmdirSync(this._outputDir, { recursive: true });
-      } catch (error) {
-        console.error(error.message);
+        fs.rmdirSync(this._outputDir);
+      } catch (e) {
+        const error = e as Error;
+        Logger.logError(APP_LOGGER_CATEGORY, error.message);
       }
     }
 
     try {
       fs.mkdirSync(this._outputDir, { recursive: true });
-    } catch (error) {
-      console.error(error.message);
+    } catch (e) {
+      const error = e as Error;
+      Logger.logError(APP_LOGGER_CATEGORY, error.message);
     }
   }
 
@@ -93,10 +95,9 @@ export class DataExporter {
     return outHeader;
   }
 
-  private async calculateMassProps(ids: Id64Array): Promise<MassProps> {
+  public async calculateMassProps(ids: Id64Array): Promise<MassProps> {
     const result: MassProps = { totalCount: ids.length, volume: 0, volumeCount: 0, area: 0, areaCount: 0, length: 0, lengthCount: 0 };
 
-    const requestContext = new BackendRequestContext();
     let count = 0;
     for (const id of ids) {
       const requestProps: MassPropertiesRequestProps = {
@@ -104,35 +105,34 @@ export class DataExporter {
         candidates: [id],
       };
       if (count > 0 && count % 1000 === 0) {
-        console.log(`Calculated ${count} mass properties: \n${JSON.stringify(result)}`);
+        Logger.logInfo(APP_LOGGER_CATEGORY, `Calculated ${count} of ${ids.length} mass properties`);
       }
       ++count;
-      const volumeProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+      const volumeProps = await this._iModelDb.getMassProperties(requestProps);
       const volume = volumeProps.volume ?? 0;
       if (volume !== 0) {
         result.volume += volume;
         result.volumeCount += 1;
       }
       requestProps.operation = MassPropertiesOperation.AccumulateAreas;
-      const areaProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+      const areaProps = await this._iModelDb.getMassProperties(requestProps);
       const area = areaProps.area ?? 0;
       if (area !== 0) {
         result.area += area;
         result.areaCount += 1;
       }
       requestProps.operation = MassPropertiesOperation.AccumulateLengths;
-      const lengthProps = await this._iModelDb.getMassProperties(requestContext, requestProps);
+      const lengthProps = await this._iModelDb.getMassProperties(requestProps);
       const length = lengthProps.length ?? 0;
       if (length !== 0) {
         result.length += length;
         result.lengthCount += 1;
       }
     }
-
     return result;
   }
 
-  private assignDefaultOptions(options: Partial<Options> = {}): Options {
+  public assignDefaultOptions(options: Partial<Options> = {}): Options {
     return { ...defaultOptions, ...options };
   }
 
@@ -158,7 +158,7 @@ export class DataExporter {
 
     let rowCount = 0;
     while (DbResult.BE_SQLITE_ROW === statement.step()) {
-      const stringifiedRow = this.rowToString(statement, options.dropIdColumnFromResult ? options.idColumn : -1);
+      const stringifiedRow = this.rowToString(statement, options.calculateMassProperties ? options.idColumn : -1);
       if (options.calculateMassProperties === true) {
         if (options.idColumnIsJsonArray === true) {
           ids = JSON.parse(statement.getValue(options.idColumn).getString()) as Id64Array;
@@ -172,11 +172,11 @@ export class DataExporter {
       }
       rowCount++;
       if (rowCount % 1000 === 0) {
-        console.log(`${rowCount} rows processed so far`);
+        Logger.logInfo(APP_LOGGER_CATEGORY, `${rowCount} rows processed so far`);
       }
     }
 
-    console.log(`Written ${rowCount} rows to file: ${outputFileName}`);
+    Logger.logInfo(APP_LOGGER_CATEGORY, `Written ${rowCount} rows to file: ${outputFileName}`);
     return new Promise((resolve, reject) => {
       writeStream.on("finish", resolve);
       writeStream.on("error", reject);

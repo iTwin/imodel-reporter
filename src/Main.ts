@@ -3,146 +3,112 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { BentleyError } from "@bentley/bentleyjs-core";
-import { ElectronAuthorizationBackend } from "@bentley/electron-manager/lib/ElectronBackend";
-import {
-  BriefcaseDb, BriefcaseManager, CheckpointManager, IModelHost, IModelJsFs, NativeHost, ProgressFunction, RequestNewBriefcaseArg,
-} from "@bentley/imodeljs-backend";
-import { IModelVersion, LocalBriefcaseProps, NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
-import { AccessToken, AuthorizedClientRequestContext } from "@bentley/itwin-client";
+import { BriefcaseDb, BriefcaseManager, IModelDb, IModelHost, IModelHostConfiguration } from "@itwin/core-backend";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { BriefcaseIdValue, LocalBriefcaseProps } from "@itwin/core-common";
+import { BackendIModelsAccess } from "@itwin/imodels-access-backend";
+import { NodeCliAuthorizationClient } from "@itwin/node-cli-authorization";
 
 import { DataExporter } from "./DataExporter";
 
-import readline = require("readline");
+const AUTH_CLIENT_CONFIG_PROPS = {
+  clientId: "imodeljs-electron-samples", // EDIT ME! Specify your own clientId
+  /** These are the minimum scopes needed - you can leave alone or replace with your own entries */
+  scope: "imodels:read",
+  /** This can be left as-is assuming you've followed the instructions in README.md when registering your application */
+  redirectUri: "http://localhost:3000/signin-callback",
+};
 
-async function signIn(): Promise<AccessToken> {
-  const config: NativeAppAuthorizationConfiguration = {
-    clientId: "imodeljs-electron-samples",
-    redirectUri: "http://localhost:3000/signin-callback",
-    scope: "openid email profile organization imodelhub context-registry-service:read-only product-settings-service urlps-third-party offline_access",
+const APP_LOGGER_CATEGORY = "imodel-report-main";
+
+(async () => {
+  const imhConfig: IModelHostConfiguration = {
+    hubAccess: new BackendIModelsAccess(), // needed to download iModels from iModelHub
+    // These tile properties are unused by this application, but are required fields of IModelHostConfiguration.
+    logTileLoadTimeThreshold: IModelHostConfiguration.defaultLogTileLoadTimeThreshold,
+    logTileSizeThreshold: IModelHostConfiguration.defaultLogTileSizeThreshold,
+    tileContentRequestTimeout: IModelHostConfiguration.defaultTileRequestTimeout,
+    tileTreeRequestTimeout: IModelHostConfiguration.defaultTileRequestTimeout,
   };
+  await IModelHost.startup(imhConfig);
 
-  const client = new ElectronAuthorizationBackend();
-  await client.initialize(config);
+  Logger.initializeToConsole();
+  Logger.setLevel(APP_LOGGER_CATEGORY, LogLevel.Info);
 
-  return new Promise<AccessToken>((resolve, reject) => {
-    NativeHost.onUserStateChanged.addListener((token) => {
-      if (token !== undefined) {
-        resolve(token);
-      } else {
-        reject(new Error("Failed to sign in"));
-      }
-    });
-    client.signIn().catch((err) => reject(err));
-  });
-}
-
-async function getBriefcase(requestContext: AuthorizedClientRequestContext, request: RequestNewBriefcaseArg): Promise<LocalBriefcaseProps> {
-  const briefcaseId = 0;
-  const fileName = request.fileName ?? BriefcaseManager.getFileName({ briefcaseId, iModelId: request.iModelId });
-
-  const asOf = request.asOf ?? IModelVersion.latest().toJSON();
-  const changeset = await BriefcaseManager.changesetFromVersion(requestContext, IModelVersion.fromJSON(asOf), request.iModelId);
-
-  const args = {
-    localFile: fileName,
-    checkpoint: {
-      requestContext,
-      contextId: request.contextId,
-      iModelId: request.iModelId,
-      changeSetId: changeset.id,
-      changesetIndex: changeset.index,
-    },
-    onProgress: request.onProgress,
-  };
-
-  await CheckpointManager.downloadCheckpoint(args);
-  const fileSize = IModelJsFs.lstatSync(fileName)?.size ?? 0;
-  const response: LocalBriefcaseProps = {
-    fileName,
-    briefcaseId,
-    iModelId: request.iModelId,
-    contextId: request.contextId,
-    changeSetId: args.checkpoint.changeSetId,
-    changesetIndex: args.checkpoint.changesetIndex,
-    fileSize,
-  };
-
-  return response;
-}
-
-export async function main(process: NodeJS.Process): Promise<void> {
-  try {
-    await IModelHost.startup();
-
-    const accessToken: AccessToken = await signIn();
-
-    let userdata;
-    const json = process.argv[2];
-    if (json === undefined) {
-      userdata = require("../queries/example.json");
-    } else {
-      userdata = require(json);
-    }
-
-    const url = new URL(userdata.url.toLowerCase());
-    const projectId: string = url.searchParams.get("projectid") ?? "";
-    const iModelId: string = url.searchParams.get("imodelid") ?? "";
-    const changeSetId: string = url.searchParams.get("changesetid") ?? "";
-
-    const version = changeSetId === "" ? IModelVersion.latest() : IModelVersion.asOfChangeSet(changeSetId);
-
-    const guidRegex = new RegExp("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}");
-    if (!guidRegex.test(projectId) || !guidRegex.test(iModelId)) {
-      console.error("Error in parsing url from query");
-      return;
-    }
-
-    // If this function returns non-zero, the download is aborted.
-    const progressTracking: ProgressFunction = (loaded: number, total: number): number => {
-      const percent = loaded / total * 100;
-      readline.cursorTo(process.stdout, 0);
-      process.stdout.write(`Downloaded: ${percent.toFixed(2)} %`);
-
-      return 0;
-    };
-
-    console.log(`Started opening iModel (projectId=${projectId}, iModelId=${iModelId}, changeSetId=${changeSetId})`);
-    const requestContext: AuthorizedClientRequestContext = new AuthorizedClientRequestContext(accessToken);
-    const requestNewBriefcaseArg: RequestNewBriefcaseArg = { contextId: projectId, iModelId, asOf: version.toJSON(), briefcaseId: 0, onProgress: progressTracking };
-    const briefcaseProps = await getBriefcase(requestContext, requestNewBriefcaseArg);
-    requestContext.enter();
-
-    const iModelDb = await BriefcaseDb.open(requestContext, briefcaseProps);
-    requestContext.enter();
-    console.log("\nFinished opening iModel");
-
-    const exporter = new DataExporter(iModelDb);
-    exporter.setFolder(userdata.folder);
-
-    for (const querykey of Object.keys(userdata.queries)) {
-      console.log(`Executing query for ${querykey}`);
-      const aQuery = userdata.queries[querykey];
-      const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
-      await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options);
-    }
-
-    iModelDb.close();
-  } catch (error) {
-    console.error(`${error.message}\n${error.stack}`);
-  } finally {
-    await IModelHost.shutdown();
+  let userdata;
+  const json = process.argv[2];
+  if (json === undefined) {
+    userdata = require("../queries/example.json");
+  } else {
+    userdata = require(json);
   }
+
+  const url = new URL(userdata.url.toLowerCase());
+  const iTwinId: string = url.searchParams.get("projectid") ?? "";
+  const iModelId: string = url.searchParams.get("imodelid") ?? "";
+  const changeSetId: string = url.searchParams.get("changesetid") ?? "";
+  const iModelDb: IModelDb = await openIModelFromIModelHub(iTwinId, iModelId, changeSetId);
+
+  Logger.logInfo(APP_LOGGER_CATEGORY, `iModel ${iModelDb.name} acquired and opened`);
+  const exporter = new DataExporter(iModelDb);
+  exporter.setFolder(userdata.folder);
+
+  for (const querykey of Object.keys(userdata.queries)) {
+    const aQuery = userdata.queries[querykey];
+    const fileName = `${aQuery.store !== undefined ? aQuery.store : querykey}.csv`;
+    await exporter.writeQueryResultsToCsv(aQuery.query, fileName, aQuery.options);
+  }
+
+  iModelDb.close();
+})().catch((reason) => {
+  process.stdout.write(`${reason}\n`);
+  process.exit(1);
+});
+
+export async function openIModelFromIModelHub(iTwinId: string, iModelId: string, changeSetId: string): Promise<BriefcaseDb> {
+  if (!AUTH_CLIENT_CONFIG_PROPS.clientId || !AUTH_CLIENT_CONFIG_PROPS.scope || !AUTH_CLIENT_CONFIG_PROPS.redirectUri)
+    return Promise.reject("You must edit AUTH_CLIENT_CONFIG in Main.ts");
+
+  const authorizationClient = new NodeCliAuthorizationClient({ ...AUTH_CLIENT_CONFIG_PROPS });
+  Logger.logInfo(APP_LOGGER_CATEGORY, "Attempting to sign in");
+  await authorizationClient.signIn();
+  Logger.logInfo(APP_LOGGER_CATEGORY, "Sign in successful");
+  IModelHost.authorizationClient = authorizationClient;
+
+  let briefcaseProps: LocalBriefcaseProps | undefined = getBriefcaseFromCache(iModelId);
+  if (!briefcaseProps)
+    briefcaseProps = await downloadBriefcase(iTwinId, iModelId, changeSetId);
+
+  const briefcaseResult = BriefcaseDb.open({ fileName: briefcaseProps.fileName, readonly: true });
+  return briefcaseResult;
 }
 
-if (require.main === module) {
-  (async () => {
-    await main(process);
-  })().catch((err) => {
-    if (err instanceof BentleyError)
-      process.stderr.write(`Error: ${err.name}: ${err.message}`);
-    else
-      process.stderr.write(`Unknown error: ${err.message}`);
-    process.exit(err.errorNumber ?? -1);
-  });
+function getBriefcaseFromCache(iModelId: string): LocalBriefcaseProps | undefined {
+  const cachedBriefcases: LocalBriefcaseProps[] = BriefcaseManager.getCachedBriefcases(iModelId);
+  if (cachedBriefcases.length === 0) {
+    Logger.logInfo(APP_LOGGER_CATEGORY, `No cached briefcase found for ${iModelId}`);
+    return undefined;
+  }
+
+  // Just using any version that's cached. A real program would verify that this is the desired changeset.
+  Logger.logInfo(APP_LOGGER_CATEGORY, `Using cached briefcase found at ${cachedBriefcases[0].fileName}`);
+  return cachedBriefcases[0];
+}
+
+async function downloadBriefcase(iTwinId: string, iModelId: string, changeSetId: string): Promise<LocalBriefcaseProps> {
+  Logger.logInfo(APP_LOGGER_CATEGORY, `Downloading new briefcase for iTwinId ${iTwinId} iModelId ${iModelId}`);
+
+  let nextProgressUpdate = new Date().getTime() + 2000; // too spammy without some throttling
+  const onProgress = (loadedBytes: number, totalBytes: number): number => {
+    if (new Date().getTime() > nextProgressUpdate) {
+      if (loadedBytes === totalBytes)
+        Logger.logInfo(APP_LOGGER_CATEGORY, `Download complete, applying changesets`);
+      else
+        Logger.logInfo(APP_LOGGER_CATEGORY, `Downloaded ${(loadedBytes / (1024 * 1024)).toFixed(2)}MB of ${(totalBytes / (1024 * 1024)).toFixed(2)}MB`);
+      nextProgressUpdate = new Date().getTime() + 2000;
+    }
+    return 0;
+  };
+
+  return BriefcaseManager.downloadBriefcase({ ...{ iTwinId, iModelId, changeSetId }, onProgress, briefcaseId: BriefcaseIdValue.Unassigned });
 }
