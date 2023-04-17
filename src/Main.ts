@@ -1,4 +1,5 @@
 /*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
@@ -109,5 +110,5 @@ async function downloadBriefcase(iTwinId: string, iModelId: string, changeSetId:
     return 0;
   };
 
-  return BriefcaseManager.downloadBriefcase({ ...{iTwinId, iModelId, changeSetId}, onProgress, briefcaseId: BriefcaseIdValue.Unassigned });
+  return BriefcaseManager.downloadBriefcase({ ...{ iTwinId, iModelId, changeSetId }, onProgress, briefcaseId: BriefcaseIdValue.Unassigned });
 }

@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { IModelHost, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
-import { Id64Array } from "@itwin/core-bentley/lib/cjs/Id";
+import { Id64Array } from "@itwin/core-bentley";
 
 import { DataExporter, Options } from "../DataExporter";
 import { populateSourceDb, prepareSourceDb } from "./iModelUtils";
